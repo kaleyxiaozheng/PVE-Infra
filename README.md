@@ -127,6 +127,23 @@ TBC
 
 </details>
 
+<details><summary>Install Tailscale to K3s-master-node</summary>
+
+Got an error when check k3s master VM status.
+```bash
+root@pve:~# systemctl status k3s
+Unit k3s.service could not be found.
+```
+
+🔧 Fix: Install Tailscale to k3s VM  
+1. Access K3s master VM console 
+2. run command
+```bash
+curl -fsSL https://tailscale.com/install.sh | sh
+sudo tailscale up
+```
+</details>
+
 
 # Setup K3s cluster in BeeLink
 <details><summary>Creating a Proxmox VE (PVE) bootable USB drive</summary>
@@ -631,7 +648,21 @@ Tailscale virtual network interface (the tailscale0 or utun interface) has taken
 🌟🌟 solution:  
 1️⃣ ssh pve via terminal: `ssh root@100.85.222.115`  
 2️⃣ access pve via browser: `https://100.85.222.115:8006`
+
+![image](./img/tailscale_ip.png)
+
+![image](./img/connected_devices_tailscale.png)
 ‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️
+
+<details><summary>💡 Learning Points</summary>
+
+1. K3s runs as a Systemd service in the background, rather than a process that you need to manually "start" or keep open in your terminal, then you can check its status and start it after `ssh pve`
+
+```bash
+sudo systemctl status k3s
+sudo systemctl start k3s
+```
+</details>
 
 这是一个非常好的策略性问题。作为架构师，我会建议你：先安装 Prometheus 和 Grafana，然后再扩容 Worker 节点。
 原因在于，监控系统本身就是你管理集群的“眼睛”。
