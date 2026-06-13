@@ -101,7 +101,7 @@ If you are aiming for privacy and reliability, look for devices labeled "Local C
 To simulate a complete cloud-native lifecycle locally at near-zero cost: from microservice orchestration, CI/CD pipeline load testing, and Service Mesh traffic management, to the architectural evolution of your future platform products.
 </br>
 
-# Setup K3s cluster in BeeLink
+# Setup BeeLink
 <details><summary>Creating a Proxmox VE (PVE) bootable USB drive</summary>
 
 1. Download [Etcher for macOS (arm64)](https://etcher.balena.io/#download-etcher) and then drag `balenaEtcher` to Application
@@ -141,7 +141,9 @@ To simulate a complete cloud-native lifecycle locally at near-zero cost: from mi
 
 </details>
 
-<details><summary>Setup K3s Cluster </summary>
+# Setup K3s master node in BeeLink
+
+
 
 <details><summary>1. Create VM</summary>
 Log in PVE, and click `Create VM`
@@ -480,159 +482,6 @@ Then open chrome and input `http://192.168.50.101:30566`
 | prometheus-prometheus-kube-prometheus-prometheus | | | 
 | prometheus-prometheus-node-exporter | | | 
 </details>
-
-<details><summary>9. Create ubuntu-template in pve</summary>
-
-1. Create a basci VM
-
-![image](./img/basic_vm_1.png)
-
-![image](./img/basic_vm_2.png)
-
-![image](./img/basic_vm_3.png)
-
-![image](./img/basic_vm_4.png)
-
-![image](./img/basic_vm_5.png)
-💡 Setting the CPU type to host allows the virtual machine to directly utilize the full instruction set of the physical host CPU. This is particularly important for Kubernetes nodes, as it ensures the cluster can leverage advanced features like hardware virtualization extensions and specific instruction sets (such as AVX or AES-NI) required for efficient node operation and container performance.
-
-![image](./img/basic_vm_6.png)
-
-![image](./img/basic_vm_7.png)
-
-![image](./img/basic_vm_8.png)
-
-🔴🟠🟡🟢🔵🟣 🔴🟠🟡🟢🔵🟣 🔴🟠🟡🟢🔵🟣 🔴🟠🟡🟢🔵🟣 
-
-‼️ To automate deployments using Terraform, ensure that a Cloud-Init Drive is added to Ubuntu VM template hardware configuration (select "Add" -> "CloudInit Drive" in the Proxmox interface) after installing the Ubuntu OS.
-
-⚠️ This is a mandatory requirement for the proxmox_vm_qemu resource in Terraform to communicate with the cloned virtual machine, inject your SSH public key, and apply network configurations.
-
-🔴🟠🟡🟢🔵🟣 🔴🟠🟡🟢🔵🟣 🔴🟠🟡🟢🔵🟣 🔴🟠🟡🟢🔵🟣 
-2. add Cloud Init Drive
-![image](./img/add_cloudinit_driver_1.png)
-
-![image](./img/add_cloudinit_driver_2.png)
-
-![image](./img/add_cloudinit_driver_3.png)
-
-3. Start VM ubuntu-template and complete VM configuration by clicking console
-
-![image](./img/configu_vm_template_1.png)
-password: 12345
-
-![image](./img/configu_vm_template_2.png)
-✅: Install OpenSSH server
-
-The system will automatically install and configure the SSH service during the OS installation process. By doing this—and once you have completed the installation, cleaned up the instance, and converted the VM into a template—you will be able to remotely access these nodes via SSH directly.
-This eliminates the need to open the Proxmox web-based console every time 
-
-- remove iso from CD/DVD Drive and reboot the vm
-
-![image](./img/login_ubuntu_template_vm.png)
-
-4. Run following command 
-```bash
-# 1. Update package list and install essential tools
-sudo apt update
-sudo apt install -y qemu-guest-agent cloud-init
-
-# 2. Enable the Guest Agent
-# This allows Proxmox to correctly identify and display the virtual machine's IP address and manage it effectively.
-sudo systemctl enable --now qemu-guest-agent
-
-# 3. Clean the environment for template conversion
-sudo cloud-init clean
-sudo truncate -s 0 /etc/machine-id
-
-# 4. shut vm
-sudo poweroff
-```
-
-5. convert ubuntu-template vm to template
-
-![image](./img/convert_ubuntu_template_vm_to_template.png)
-
-</details>
-
-<details><summary>10. Create AWS S3 bucket and Terraform Repo</summary>
-
-1. Create a root account in AWS
-2. Create an IAM user
-- login root account
-- Search IAM
-- User -> Create user (Admin)
-
-![image](./img/create_IAM_admin_user.png)
-
-- Permission -> `AdministratorAccess`
-
-![image](./img/create_IAM_admin_user_permission.png)
-
-3. provision AWS services via Admin user
-
-![image](./img/IAM_admin_user_login.png)
-
-4. 💰 Create AWS Budgets under **Root Account**
-- Create budget in AWS Budgets
-- Choose `Use a template (simplified)`
-- Choose `Zero spend budget`
-- Verify amount is $0.01 in `Budget amount`
-- Email recipients: `team.aegisestate@gmail.com`
-- Click `Create budget`
-
-![image](./img/create_AWS_budgets.png)
-</details>
-
-<details><summary>🚀🚀🚀🚀 Save the budget🚀🚀🚀</summary>
-
-给你的避坑指南（进阶版）
-为了确保你的“永久不花钱”策略不失效，请记住这三条黄金准则：
-•	避开“试用期”陷阱： AWS 有时会默认推荐一些高性能的存储（如 io2）或高级网络服务。在创建资源时，如果看到提示 "Free Tier Eligible"（符合免费层级），一定要勾选那个特定的配置。
-•	别忘了清理： 你提到要做 AI Infra，这意味着你可能会用到 EC2（服务器）或 SageMaker（AI 训练）。这些东西不是永久免费的。
-•	操作习惯： 每次练习完，确保进去点一下 "Terminate"（彻底终止，不是 Stop）。只有 Terminate 了，该资源占用的费用才会停止。
-•	关于 Always Free： 当你看到 t3.micro 等服务标有 "Always Free" 时，这意味着只要你不超出每月 750 小时的使用限额，它就是永久免费的。这是你构建智能家居后台的首选。
-</details>
-
-<details><summary>11. Scale K3s cluster by adding three new worker nodes </summary>
-
-To ensure the cluster runs stably while leaving room for future AI Agents and CI/CD tasks, worker nodes resource allocation will be like following:
-
-| Resource Item | Configuration per Worker Ndoe (3 Nodes Total) | Reasioning |
-| :--- | :--- | :--- |
-| vCPU | 2 vCPU | The i5-13500H has 14 cores; allocating 2 cores is completely sufficient for handling CI/CD tasks and AI inference requests | 
-| RAM | 3 GB | After subtracting the resources used by PVE/HAOS from the 16GB total, 3GB per node is a "safety line" that allows running multiple Pods without causing physical memory overcommitment | 
-| Disk | 30 GB | Thin Provisioning: Starts with a small footprint and expands as data increases |
-
-1. Preparation
-- Create API Token
-> 1. Log into PVE (https://192.168.50.100:8006/)
-> 2. API Token configuration  
-Datacenter -> Permissions -> API Tokens -> Add
-> 3. Add permission to terraform-token
-> 4. Verify token  
-> 
->`curl -kv -H "Authorization: PVEAPIToken=root@pam!terraform-token=d6ba2358-e8dc-4c77-b198-60637dc01075" https://192.168.50.100:8006/api2/json/nodes`
->
-> `curl -k -H "Authorization: PVEAPIToken=root@pam\!terraform-token=d6ba2358-e8dc-4c77-b198-60637dc01075" https://192.168.50.100:8006/api2/json/nodes`
-
-![image](./img/API_token_configuration.png)
-
-![image](./img/API_token_creation.png)
-
-![image](./img/API_token_info.png)
-
-![image](./img/add_permission_to_terraform_token.png)
-
-![image](./img/verify_api_token_1.png)
-> 🚫 Token ID is incorrect in Authorization: PVEAPIToken=root@pamterraform...
-
-![image](./img/verify_api_token_2.png)
-
-- Prepare Terraform template
-
-</details>
-</details>
 </br>
 
 # Install Tailscale 
@@ -782,9 +631,231 @@ EOF
 •	集群管理： 你的 Mac 现在已经成为该 K3s 集群的远程管理终端。
 </details>
 </br>
-‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️  
-‼️IMPORTANT‼️ Network Routing Conflict: Tailscale Interference   
 
+# Terrafrom (IaC) and AWS
+<details><summary>Create AWS Root account and Admin user</summary>
+
+1. Create a root account in AWS
+2. Create an IAM user
+- login root account
+- Search IAM
+- User -> Create user (Admin)
+
+![image](./img/create_IAM_admin_user.png)
+
+- Permission -> `AdministratorAccess`
+
+![image](./img/create_IAM_admin_user_permission.png)
+
+📝 **Any AWS services will be prvisionsed by Admin user**
+
+![image](./img/IAM_admin_user_login.png)
+
+</details>
+
+<details><summary>💰 Create AWS Budgets</summary>
+
+<details><summary>💰 💰 Create AWS Budgets under Root Account</summary>
+
+- Create budget in AWS Budgets
+- Choose `Use a template (simplified)`
+- Choose `Zero spend budget`
+- Verify amount is $0.01 in `Budget amount`
+- Email recipients: `team.aegisestate@gmail.com`
+- Click `Create budget`
+
+![image](./img/create_AWS_budgets.png)
+</details>
+
+<details><summary>🚀🚀🚀🚀 Save the budget🚀🚀🚀</summary>
+
+给你的避坑指南（进阶版）
+为了确保你的“永久不花钱”策略不失效，请记住这三条黄金准则：
+•	避开“试用期”陷阱： AWS 有时会默认推荐一些高性能的存储（如 io2）或高级网络服务。在创建资源时，如果看到提示 "Free Tier Eligible"（符合免费层级），一定要勾选那个特定的配置。
+•	别忘了清理： 你提到要做 AI Infra，这意味着你可能会用到 EC2（服务器）或 SageMaker（AI 训练）。这些东西不是永久免费的。
+•	操作习惯： 每次练习完，确保进去点一下 "Terminate"（彻底终止，不是 Stop）。只有 Terminate 了，该资源占用的费用才会停止。
+•	关于 Always Free： 当你看到 t3.micro 等服务标有 "Always Free" 时，这意味着只要你不超出每月 750 小时的使用限额，它就是永久免费的。这是你构建智能家居后台的首选。
+</details>
+</details>
+
+<details><summary>Configure AWS configure, AWS CLI and Terraform CLI</summary>
+
+<details><summary>1. AWS CLI and AWS configure</summary>
+
+```bash
+aws --version
+
+# install aws CLI
+curl "https://awscli.amazonaws.com/AWSCLIV2.pkg" -o "AWSCLIV2.pkg"
+
+sudo installer -pkg AWSCLIV2.pkg -target /
+
+which aws
+aws --version
+```
+
+2. Connect AWS Admin account 
+- Prepare key
+> 1. AWS IAM -> AIM User (Admin) -> Security credentials -> Access keys -> Click `Create access key`
+>
+> 2. Save `Secret Key`
+- aws configure
+> Run `aws configure` from Mac Terminal
+
+```bash
+AWS Access Key ID: #copy and paste Access Key from CSV file
+AWS Secret Access Key: # copy and paste Secret Key from CSV file
+Default region name: ap-southeast-2 # same as terraform code
+Default output format: json  # hit return
+
+# verify
+aws sts get-caller-identity
+```
+
+![image](./img/aws_config_admin_account.png)
+</details>
+
+<details><summary>2. Terrafrom </summary>
+
+1. Terraform CLI
+```bash
+terraform --version
+
+# upgrade version
+brew trust hashicorp/tap
+brew upgrade terraform  
+```
+
+2. run command `terrafomr init` under `pve-cluster` project **root path**
+
+This command will do following things:
+
+- Download Provider plugins: it reads provider.tf file，and downloads hashicorp/aws and Telmate/proxmox to .terraform file
+- Initialise Backend： it checks backend.tf and connects to AWS if it detecs S3
+- Create workspace： it creates .terraform folder and lock.hcl file，These files guarantee the exact same plugin versions every time you run the code
+
+</details>
+</details>
+</br>
+
+# Set up K3s cluster
+<details><summary>11. Scale K3s cluster by adding three new worker nodes </summary>
+
+To ensure the cluster runs stably while leaving room for future AI Agents and CI/CD tasks, worker nodes resource allocation will be like following:
+
+| Resource Item | Configuration per Worker Ndoe (3 Nodes Total) | Reasioning |
+| :--- | :--- | :--- |
+| vCPU | 2 vCPU | The i5-13500H has 14 cores; allocating 2 cores is completely sufficient for handling CI/CD tasks and AI inference requests | 
+| RAM | 3 GB | After subtracting the resources used by PVE/HAOS from the 16GB total, 3GB per node is a "safety line" that allows running multiple Pods without causing physical memory overcommitment | 
+| Disk | 30 GB | Thin Provisioning: Starts with a small footprint and expands as data increases |
+
+1. Preparation
+- Create API Token
+> 1. Log into PVE (https://192.168.50.100:8006/)
+> 2. API Token configuration  
+Datacenter -> Permissions -> API Tokens -> Add
+> 3. Add permission to terraform-token
+> 4. Verify token  
+> 
+>`curl -kv -H "Authorization: PVEAPIToken=root@pam!terraform-token=d6ba2358-e8dc-4c77-b198-60637dc01075" https://192.168.50.100:8006/api2/json/nodes`
+>
+> `curl -k -H "Authorization: PVEAPIToken=root@pam\!terraform-token=d6ba2358-e8dc-4c77-b198-60637dc01075" https://192.168.50.100:8006/api2/json/nodes`
+
+![image](./img/API_token_configuration.png)
+
+![image](./img/API_token_creation.png)
+
+![image](./img/API_token_info.png)
+
+![image](./img/add_permission_to_terraform_token.png)
+
+![image](./img/verify_api_token_1.png)
+> 🚫 Token ID is incorrect in Authorization: PVEAPIToken=root@pamterraform...
+
+![image](./img/verify_api_token_2.png)
+
+- Prepare Terraform template
+
+</details>
+
+<details><summary>9. Create ubuntu-template in pve</summary>
+
+1. Create a basci VM
+
+![image](./img/basic_vm_1.png)
+
+![image](./img/basic_vm_2.png)
+
+![image](./img/basic_vm_3.png)
+
+![image](./img/basic_vm_4.png)
+
+![image](./img/basic_vm_5.png)
+💡 Setting the CPU type to host allows the virtual machine to directly utilize the full instruction set of the physical host CPU. This is particularly important for Kubernetes nodes, as it ensures the cluster can leverage advanced features like hardware virtualization extensions and specific instruction sets (such as AVX or AES-NI) required for efficient node operation and container performance.
+
+![image](./img/basic_vm_6.png)
+
+![image](./img/basic_vm_7.png)
+
+![image](./img/basic_vm_8.png)
+
+🔴🟠🟡🟢🔵🟣 🔴🟠🟡🟢🔵🟣 🔴🟠🟡🟢🔵🟣 🔴🟠🟡🟢🔵🟣 
+
+‼️ To automate deployments using Terraform, ensure that a Cloud-Init Drive is added to Ubuntu VM template hardware configuration (select "Add" -> "CloudInit Drive" in the Proxmox interface) after installing the Ubuntu OS.
+
+⚠️ This is a mandatory requirement for the proxmox_vm_qemu resource in Terraform to communicate with the cloned virtual machine, inject your SSH public key, and apply network configurations.
+
+🔴🟠🟡🟢🔵🟣 🔴🟠🟡🟢🔵🟣 🔴🟠🟡🟢🔵🟣 🔴🟠🟡🟢🔵🟣 
+2. add Cloud Init Drive
+![image](./img/add_cloudinit_driver_1.png)
+
+![image](./img/add_cloudinit_driver_2.png)
+
+![image](./img/add_cloudinit_driver_3.png)
+
+3. Start VM ubuntu-template and complete VM configuration by clicking console
+
+![image](./img/configu_vm_template_1.png)
+password: 12345
+
+![image](./img/configu_vm_template_2.png)
+✅: Install OpenSSH server
+
+The system will automatically install and configure the SSH service during the OS installation process. By doing this—and once you have completed the installation, cleaned up the instance, and converted the VM into a template—you will be able to remotely access these nodes via SSH directly.
+This eliminates the need to open the Proxmox web-based console every time 
+
+- remove iso from CD/DVD Drive and reboot the vm
+
+![image](./img/login_ubuntu_template_vm.png)
+
+4. Run following command 
+```bash
+# 1. Update package list and install essential tools
+sudo apt update
+sudo apt install -y qemu-guest-agent cloud-init
+
+# 2. Enable the Guest Agent
+# This allows Proxmox to correctly identify and display the virtual machine's IP address and manage it effectively.
+sudo systemctl enable --now qemu-guest-agent
+
+# 3. Clean the environment for template conversion
+sudo cloud-init clean
+sudo truncate -s 0 /etc/machine-id
+
+# 4. shut vm
+sudo poweroff
+```
+
+5. convert ubuntu-template vm to template
+
+![image](./img/convert_ubuntu_template_vm_to_template.png)
+
+</details>
+
+</details></br>
+
+# ‼️IMPORTANT‼️
+<details><summary>‼️ Network Routing Conflict: Tailscale Interference  </summary>
 
 Tailscale virtual network interface (the tailscale0 or utun interface) has taken over the system's routing table.
 
@@ -795,9 +866,11 @@ Tailscale virtual network interface (the tailscale0 or utun interface) has taken
 ![image](./img/tailscale_ip.png)
 
 ![image](./img/connected_devices_tailscale.png)
-‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️
+</details>
+</br>
 
-<details><summary>💡 Learning Points</summary>
+# Learning Points
+<details><summary>💡 K3s runs as a Systemd service in the background</summary>
 
 1. K3s runs as a Systemd service in the background, rather than a process that you need to manually "start" or keep open in your terminal, then you can check its status and start it after `ssh pve`
 
@@ -806,6 +879,7 @@ sudo systemctl status k3s
 sudo systemctl start k3s
 ```
 </details>
+</br>
 
 这是一个非常好的策略性问题。作为架构师，我会建议你：先安装 Prometheus 和 Grafana，然后再扩容 Worker 节点。
 原因在于，监控系统本身就是你管理集群的“眼睛”。
@@ -823,3 +897,6 @@ sudo systemctl start k3s
 
 
 
+what is makefile?
+write dokcerfile
+write terraform module

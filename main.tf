@@ -35,3 +35,4 @@ resource "aws_dynamodb_table" "aegis_logic_dynamodb_table" {
     name = "LockID"
     type = "S"
 }
+}
