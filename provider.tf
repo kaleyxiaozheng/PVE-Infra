@@ -5,6 +5,13 @@ terraform {
       version = "3.0.1-rc1"
     }
   }
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
 }
 
 provider "proxmox" {
@@ -12,4 +19,9 @@ provider "proxmox" {
   pm_api_token_id     = "root@pam!terraform-token"
   pm_api_token_secret = "d6ba2358-e8dc-4c77-b198-60637dc01075"
   pm_tls_insecure     = true
+}
+
+provider "aws" {
+  alias  = "sydney"
+  region = "ap-southeast-2"
 }

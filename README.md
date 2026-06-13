@@ -555,7 +555,46 @@ sudo poweroff
 
 </details>
 
-<details><summary>10. Scale K3s cluster by adding three new worker nodes </summary>
+<details><summary>10. Create AWS S3 bucket and Terraform Repo</summary>
+
+1. Create a root account in AWS
+2. Create an IAM user
+- login root account
+- Search IAM
+- User -> Create user (Admin)
+
+![image](./img/create_IAM_admin_user.png)
+
+- Permission -> `AdministratorAccess`
+
+![image](./img/create_IAM_admin_user_permission.png)
+
+3. provision AWS services via Admin user
+
+![image](./img/IAM_admin_user_login.png)
+
+4. 💰 Create AWS Budgets under **Root Account**
+- Create budget in AWS Budgets
+- Choose `Use a template (simplified)`
+- Choose `Zero spend budget`
+- Verify amount is $0.01 in `Budget amount`
+- Email recipients: `team.aegisestate@gmail.com`
+- Click `Create budget`
+
+![image](./img/create_AWS_budgets.png)
+</details>
+
+<details><summary>🚀🚀🚀🚀 Save the budget🚀🚀🚀</summary>
+
+给你的避坑指南（进阶版）
+为了确保你的“永久不花钱”策略不失效，请记住这三条黄金准则：
+•	避开“试用期”陷阱： AWS 有时会默认推荐一些高性能的存储（如 io2）或高级网络服务。在创建资源时，如果看到提示 "Free Tier Eligible"（符合免费层级），一定要勾选那个特定的配置。
+•	别忘了清理： 你提到要做 AI Infra，这意味着你可能会用到 EC2（服务器）或 SageMaker（AI 训练）。这些东西不是永久免费的。
+•	操作习惯： 每次练习完，确保进去点一下 "Terminate"（彻底终止，不是 Stop）。只有 Terminate 了，该资源占用的费用才会停止。
+•	关于 Always Free： 当你看到 t3.micro 等服务标有 "Always Free" 时，这意味着只要你不超出每月 750 小时的使用限额，它就是永久免费的。这是你构建智能家居后台的首选。
+</details>
+
+<details><summary>11. Scale K3s cluster by adding three new worker nodes </summary>
 
 To ensure the cluster runs stably while leaving room for future AI Agents and CI/CD tasks, worker nodes resource allocation will be like following:
 

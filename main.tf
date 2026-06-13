@@ -2,7 +2,7 @@ resource "proxmox_vm_qemu" "worker_nodes" {
   count       = 3
   name        = "worker-node-${count.index + 1}"
   target_node = "pve"
-  clone       = "ubuntu-template" # 确保你在 PVE 里右键创建了一个名为 ubuntu-template 的模板
+  clone       = "ubuntu-template" # make sure a template named "ubuntu-template" in Proxmox clusteryou has been created
 
   agent    = 1
   cores    = 2
@@ -20,4 +20,18 @@ resource "proxmox_vm_qemu" "worker_nodes" {
     type    = "scsi"
     size    = "30G"
   }
+}
+
+resource "aws_s3_bucket" "aegis_logic_s3_bucket" {
+  bucket = "${local.project_prefix}-${local.common_tags.ManagedBy}-bucket"
+}
+
+resource "aws_dynamodb_table" "aegis_logic_dynamodb_table" {
+  name = "${local.project_prefix}-${local.common_tags.Environment}-lock"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key = "LockID"
+
+  attribute {
+    name = "LockID"
+    type = "S"
 }
