@@ -10,29 +10,18 @@ resource "proxmox_vm_qemu" "worker_nodes" {
   scsihw   = "virtio-scsi-pci"
   bootdisk = "scsi0"
 
+   disk {
+      storage = "local-lvm"
+      type    = "scsi"
+      size    = "30G"
+  }
+
   network {
     bridge = "vmbr0"
     model  = "virtio"
   }
-
-  disk {
-    storage = "local-lvm"
-    type    = "scsi"
-    size    = "30G"
-  }
 }
 
 resource "aws_s3_bucket" "aegis_logic_s3_bucket" {
-  bucket = "${local.project_prefix}-${local.common_tags.ManagedBy}-bucket"
-}
-
-resource "aws_dynamodb_table" "aegis_logic_dynamodb_table" {
-  name = "${local.project_prefix}-${local.common_tags.Environment}-lock"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key = "LockID"
-
-  attribute {
-    name = "LockID"
-    type = "S"
-}
+  bucket = "${local.project_prefix}-${local.common_tags.ManagedBy}-state-bucket"
 }
