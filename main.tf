@@ -1,10 +1,9 @@
 resource "proxmox_virtual_environment_vm" "worker_nodes" {
   count     = 3
   name      = "worker-node-${count.index + 1}"
-  node_name = "pve" 
-  vm_id     = 102 + count.index 
+  node_name = "pve"
+  vm_id     = 102 + count.index
 
-  # 基础信息
   agent {
     enabled = true
   }
@@ -31,6 +30,25 @@ resource "proxmox_virtual_environment_vm" "worker_nodes" {
   network_device {
     bridge = "vmbr0"
     model  = "virtio"
+  }
+
+  initialization {
+    user_data_file_id = proxmox_virtual_environment_file.cloud_config[count.index].id
+  }
+}
+
+resource "proxmox_virtual_environment_file" "cloud_config" {
+  count        = 3
+  content_type = "snippets"
+  datastore_id = "local"
+  node_name    = "pve"
+
+  file_name = "worker-node-${count.index + 1}-cloud-config.yaml"
+
+  source_raw {
+    data = templatefile("cloud-init.yaml.tpl", {
+      hostname = "worker-node-${count.index + 1}"
+    })
   }
 }
 

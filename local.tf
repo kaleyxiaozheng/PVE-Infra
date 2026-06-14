@@ -4,7 +4,7 @@ locals {
     Environment = local.env
     ManagedBy   = "terraform"
   }
-  
+
   project_prefix = "aegis-logic"
   env            = "dev"
 }

@@ -183,6 +183,7 @@ Log in PVE, and click `Create VM`
 </details>
 
 <details><summary>2. Configue Network</summary>
+
 - Start k3s-master server
 - Click upper right `console` 
 - Choose `Continue without updating`
