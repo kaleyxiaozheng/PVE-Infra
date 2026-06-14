@@ -894,7 +894,13 @@ sudo poweroff
 
 <details><summary>3. Create Worker Nodes</summary>
 
+1. create worker nodes via terrafrom
 
+⛔ Error occurred at command `terraform plan`
+
+![image](./img/terraform_plan_2.png)
+
+🎯 Solution: Add missing permission `vm.Monitor`
 </details>
 
 </details></br>
