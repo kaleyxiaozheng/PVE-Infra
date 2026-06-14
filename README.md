@@ -900,7 +900,9 @@ sudo poweroff
 
 ![image](./img/terraform_plan_2.png)
 
-🎯 Solution: Add missing permission `vm.Monitor`
+🎯 Solution: change provider `bpg/proxmox`
+
+![image](./img/terraform_state_list.png)
 </details>
 
 </details></br>
