@@ -97,7 +97,7 @@ If you are aiming for privacy and reliability, look for devices labeled "Local C
 </details>
 </br>
 
-# Goal: 
+# Goal
 To simulate a complete cloud-native lifecycle locally at near-zero cost: from microservice orchestration, CI/CD pipeline load testing, and Service Mesh traffic management, to the architectural evolution of your future platform products.
 </br>
 
