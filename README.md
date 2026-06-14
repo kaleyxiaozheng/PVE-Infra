@@ -140,11 +140,9 @@ To simulate a complete cloud-native lifecycle locally at near-zero cost: from mi
 5. Log in from Mac terminal: `ssh root@192.168.50.100`
 
 </details>
+</br>
 
 # Setup K3s master node in BeeLink
-
-
-
 <details><summary>1. Create VM</summary>
 Log in PVE, and click `Create VM`
 
