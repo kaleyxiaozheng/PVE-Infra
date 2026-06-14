@@ -734,12 +734,52 @@ This command will do following things:
 - Initialise Backend： it checks backend.tf and connects to AWS if it detecs S3
 - Create workspace： it creates .terraform folder and lock.hcl file，These files guarantee the exact same plugin versions every time you run the code
 
+⛔ Error occurred at command `terraform init`
+
+![image](./img/s3_bucket_does_not_exist.png)
+
+🎯 Solution: create s3 bucket first
+
+![image](./img/s3_bucket_under_admin_account.png)
+
+⛔ Error occurred at command `terraform plan`
+
+![image](./img/terraform_plan_1.png)
+
+🎯 Solution: create DynamoDB manually first
+- Partition key: LockID
+
+![imaga](./img/dynamodb_under_admin_account.png)
+
+⛔ Error occurred at command `terraform plan`
+> Root cause: S3 bucket with same name exsits and it was created manually, so it was not in state file.
+
+🎯 Solution: Import S3 bucket to state file
+```bash
+terraform import aws_s3_bucket.aegis_logic_s3_bucket aegis-logic-terraform-state-bucket
+```
+
+</details>
+
+<details><summary>🌟 Tips of Terraform</summary>
+
+```bash
+# format tf codes
+terraform fmt
+
+# clean up syntax error
+terraform validate
+
+# clean up cache and do terraform init
+rm -rf .terraform .terraform.lock.hcl
+terraform init
+```
 </details>
 </details>
 </br>
 
-# Set up K3s cluster
-<details><summary>11. Scale K3s cluster by adding three new worker nodes </summary>
+# Scale K3s cluster by adding three new worker nodes
+<details><summary>1. Prepare Terraform API Token</summary>
 
 To ensure the cluster runs stably while leaving room for future AI Agents and CI/CD tasks, worker nodes resource allocation will be like following:
 
@@ -778,7 +818,7 @@ Datacenter -> Permissions -> API Tokens -> Add
 
 </details>
 
-<details><summary>9. Create ubuntu-template in pve</summary>
+<details><summary>2. Create ubuntu-template in pve</summary>
 
 1. Create a basci VM
 
@@ -849,6 +889,11 @@ sudo poweroff
 5. convert ubuntu-template vm to template
 
 ![image](./img/convert_ubuntu_template_vm_to_template.png)
+
+</details>
+
+<details><summary>3. Create Worker Nodes</summary>
+
 
 </details>
 
