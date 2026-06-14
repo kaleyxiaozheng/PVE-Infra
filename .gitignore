@@ -4,3 +4,4 @@
 # Ignore Terraform state files (CRITICAL)
 *.tfstate
 *.tfstate.backup
+.terraform.lock.hcl
