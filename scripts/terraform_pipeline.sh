@@ -37,29 +37,28 @@ terraform state list | grep s3
 #!/bin/bash
 # terraform_pipeline.sh
 
-# 1. 自动初始化
 terraform init
 
-# 2. 根据传入的参数决定部署什么
-# 使用方法: ./terraform_pipeline.sh s3 (只部署S3)
-# 使用方法: ./terraform_pipeline.sh all (部署全部)
+# 2. 
+# ./terraform_pipeline.sh s3 (only deploy S3)
+# ./terraform_pipeline.sh all (deploy everything)
 
 ACTION=$1
 
 case $ACTION in
     s3)
-        echo "正在部署 S3..."
+        echo "Deploying S3..."
         terraform apply -target=aws_s3_bucket.my_s3_bucket -auto-approve
         ;;
     db)
-        echo "正在部署 DynamoDB..."
+        echo "Deploying DynamoDB..."
         terraform apply -target=aws_dynamodb_table.my_dynamodb_table -auto-approve
         ;;
     all)
-        echo "正在执行全面部署..."
+        echo "Deploying everything..."
         terraform apply -auto-approve
         ;;
     *)
-        echo "用法: ./terraform_pipeline.sh [s3|db|all]"
+        echo "Usage: ./terraform_pipeline.sh [s3|db|all]"
         ;;
 esac
