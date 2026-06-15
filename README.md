@@ -902,6 +902,20 @@ sudo poweroff
 🎯 Solution: change provider `bpg/proxmox`
 
 ![image](./img/terraform_state_list.png)
+
+<details><summary>💡Tips</summary>
+
+```bash
+# Remove local state locks and cache
+rm -rf .terraform .terraform.lock.hcl
+
+# init plugins
+terraform init
+
+# genmerate plan
+terraform plan
+```
+</details>
 </details>
 
 </details></br>
