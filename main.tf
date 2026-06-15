@@ -37,18 +37,22 @@ resource "proxmox_virtual_environment_vm" "worker_nodes" {
   }
 }
 
+resource "local_file" "cloud_init_config" {
+  count    = 3
+  filename = "${path.module}/cloud-configs/worker-${count.index + 1}.yaml"
+  content  = templatefile("cloud-init.yaml.tpl", {
+    hostname = "worker-node-${count.index + 1}"
+  })
+}
+
 resource "proxmox_virtual_environment_file" "cloud_config" {
   count        = 3
   content_type = "snippets"
   datastore_id = "local"
   node_name    = "pve"
 
-  file_name = "worker-node-${count.index + 1}-cloud-config.yaml"
-
-  source_raw {
-    data = templatefile("cloud-init.yaml.tpl", {
-      hostname = "worker-node-${count.index + 1}"
-    })
+  source_file {
+    path = local_file.cloud_init_config[count.index].filename
   }
 }
 
