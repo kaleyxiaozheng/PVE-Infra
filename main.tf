@@ -2,7 +2,7 @@ resource "proxmox_virtual_environment_vm" "worker_nodes" {
   count     = 3
   name      = "worker-node-${count.index + 1}"
   node_name = "pve"
-  vm_id     = 102 + count.index
+  vm_id     = 101 + count.index
 
   agent {
     enabled = true
@@ -18,7 +18,7 @@ resource "proxmox_virtual_environment_vm" "worker_nodes" {
   }
 
   clone {
-    vm_id = 101 # same ID as the template used for master node in PVE
+    vm_id = 100 # same ID as the template used for master node in PVE
   }
 
   disk {

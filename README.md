@@ -895,8 +895,6 @@ sudo poweroff
 # remove template tag using sed command
 sed -i '/^template: 1/d' /etc/pve/qemu-server/101.conf
 
-sed -i '/^template: 1/d' /etc/pve/qemu-server/101.conf
-
 # check if a lock file exists
 ls -l /var/lock/pve-manager/qemu-server-101.lock
 
@@ -905,8 +903,62 @@ rm /var/lock/pve-manager/qemu-server-101.lock
 
 # check exists
 cat /etc/pve/qemu-server/101.conf
-
 ```
+
+7. Create an ubuntu template under `pve shell`
+```bash
+# 1. download Ubuntu Cloud Image
+wget https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img
+
+# 2. Create a template and import disk
+# create an empty VM with ID 101
+qm create 101 --name ubuntu-template --memory 2048 --net0 virtio,bridge=vmbr0
+
+# import image to local-lvm
+qm importdisk 101 noble-server-cloudimg-amd64.img local-lvm
+
+# Mount the imported virtual disk SCSI0
+qm set 101 --scsihw virtio-scsi-pci --scsi0 local-lvm:vm-101-disk-0
+
+# 3. configure Cloud-init
+# Configure the boot order
+qm set 101 --boot c --bootdisk scsi0
+# add Cloud-Init driver (the key to enable automated injection)
+qm set 101 --ide2 local-lvm:cloudinit
+# Enable serial console output for easier debugging
+qm set 101 --serial0 socket --vga serial0
+
+# 4. convert to template
+qm template 101
+```
+
+7. Create ubuntu-template using command under PVE shell
+```bash
+cd /var/lib/vz/template/iso/
+wget https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img
+
+# 1. Create VM with ID 100
+qm create 100 --name "ubuntu-template" --memory 2048 --cores 2 --net0 virtio,bridge=vmbr0
+
+# 2. 导入磁盘镜像到 local-lvm (请确保你的存储名称是 local-lvm)
+qm importdisk 100 jammy-server-cloudimg-amd64.img local-lvm
+
+# 3. 将导入的磁盘挂载到 VM
+qm set 100 --scsihw virtio-scsi-pci --scsi0 local-lvm:vm-101-disk-0
+
+# 4. 配置引导顺序and Cloud-Init driver
+qm set 100 --boot c --bootdisk scsi0
+qm set 100 --ide2 local-lvm:cloudinit
+qm set 100 --serial0 socket --vga serial0
+
+# 5. set Guest Agent
+qm set 100 --agent 1
+
+# check ubuntu-template configure
+qm config 100
+```
+
+![image](./img/check_ubuntu_template_using_command.png)
 </details>
 
 <details><summary>3. Create Worker Nodes</summary>
@@ -940,6 +992,18 @@ terraform state list
 </details>
 
 </details></br>
+
+# Clean up PVE
+<details><summary>Clean up master node and worker nodes in VPE  </summary>
+
+1. Shutdown k3s-master-node and 3 worker-nodes manually.
+2. Remove VM of k3s-master-node and 3 worker-nodes from PV manually 
+3. check local-lvm via command `
+pvesm list local-lvm` in pve shell
+4. if the above command returns  vm-xxx-disk-x, run command `pvesm free local-lvm:vm-102-disk-0`
+
+</details>
+</br>
 
 # ‼️IMPORTANT‼️
 <details><summary>‼️ Network Routing Conflict: Tailscale Interference  </summary>
