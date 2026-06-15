@@ -34,6 +34,16 @@ resource "proxmox_virtual_environment_vm" "worker_nodes" {
 
   initialization {
     user_data_file_id = proxmox_virtual_environment_file.cloud_config[count.index].id
+
+    user_account {
+      username = "kz"
+    }
+    
+    ip_config {
+      ipv4 {
+        address = "dhcp"
+      }
+    }
   }
 }
 

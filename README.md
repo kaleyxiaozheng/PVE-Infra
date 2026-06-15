@@ -889,6 +889,24 @@ sudo poweroff
 
 ![image](./img/convert_ubuntu_template_vm_to_template.png)
 
+6. convert ubuntu-template to normal vm
+- Run following command under `pve shell`
+```bash
+# remove template tag using sed command
+sed -i '/^template: 1/d' /etc/pve/qemu-server/101.conf
+
+sed -i '/^template: 1/d' /etc/pve/qemu-server/101.conf
+
+# check if a lock file exists
+ls -l /var/lock/pve-manager/qemu-server-101.lock
+
+# if a lock file exsits, remove it
+rm /var/lock/pve-manager/qemu-server-101.lock
+
+# check exists
+cat /etc/pve/qemu-server/101.conf
+
+```
 </details>
 
 <details><summary>3. Create Worker Nodes</summary>
@@ -914,6 +932,9 @@ terraform init
 
 # genmerate plan
 terraform plan
+
+# check terraform state
+terraform state list
 ```
 </details>
 </details>

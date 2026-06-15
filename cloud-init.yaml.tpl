@@ -1,6 +1,7 @@
 #cloud-config
 hostname: ${hostname}
 fqdn: ${hostname}.local
+manage_etc_hosts: true
 users:
   - name: kz
     ssh_authorized_keys:
