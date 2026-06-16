@@ -52,6 +52,7 @@ resource "local_file" "cloud_init_config" {
   filename = "${path.module}/cloud-configs/worker-${count.index + 1}.yaml"
   content  = templatefile("cloud-init.yaml.tpl", {
     hostname = "worker-node-${count.index + 1}"
+    ssh_pubkey = file("/Users/kaleyzheng/.ssh/id_ed25519.pub") 
   })
 }
 
