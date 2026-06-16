@@ -605,8 +605,6 @@ curl -kv -H "Authorization: PVEAPIToken=root@pam\!terraform-token=1c50f781-99db-
 
 # Create K3s master node in PVE UI
 
-<details><summary>Create K3s master node in PVE UI</summary>
-
 <details><summary>1. Create VM</summary>
 Log in PVE, and click `Create VM`
 
@@ -944,7 +942,6 @@ Then open chrome and input `http://192.168.50.101:30566`
 | prometheus-kube-state-metrics | | | 
 | prometheus-prometheus-kube-prometheus-prometheus | | | 
 | prometheus-prometheus-node-exporter | | | 
-</details>
 </details>
 </br>
  
