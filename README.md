@@ -240,7 +240,7 @@ brew upgrade terraform
 
 This command will do following things:
 
-- Download Provider plugins: it reads provider.tf file，and downloads hashicorp/aws and Telmate/proxmox to .terraform file
+- Download Provider plugins: it reads provider.tf file，and downloads hashicorp/aws and Telmate/proxmox to .terraformfile
 - Initialise Backend： it checks backend.tf and connects to AWS if it detecs S3
 - Create workspace： it creates .terraform folder and lock.hcl file，These files guarantee the exact same plugin versions every time you run the code
 
@@ -416,6 +416,190 @@ qm config 100
 ```
 
 ![image](./img/check_ubuntu_template_using_command.png)
+</details>
+</br>
+
+# Install Tailscale 
+<details><summary>What is Tailscale</summary>
+
+TBC
+</details>
+
+<details><summary>Install Tailscale to BeeLink</summary>
+
+1. SSH to PVE `ssh pve`
+2. Run command `curl -fsSL https://tailscale.com/install.sh | sh`
+3. Run command 	`tailscale up` to log into the account via browser, and sign in with Google
+
+![image](./img/tailscale_account.png)
+
+![image](./img/add_beelink_to_tailscale.png)
+</details>
+
+<details><summary>Install Tailscale to Mac</summary>
+
+1. Download Tailscale from App store
+2. Allow VPN Configuration
+
+![image](BeeLink_Mac_in_same_tunnel.png)
+
+</details>
+
+<details><summary>🚩 Install Tailscale to K3s-master-node once the master node is created </summary>
+
+Got an error when check k3s master VM status.
+```bash
+root@pve:~# systemctl status k3s
+Unit k3s.service could not be found.
+```
+
+🔧 Fix: Install Tailscale to k3s VM  
+1. Access K3s master VM console 
+2. run command
+```bash
+curl -fsSL https://tailscale.com/install.sh | sh
+sudo tailscale up
+```
+
+K3s master node is now an independent node within your Tailscale network, assigned its own unique 100.x.x.x IP address. The cluster authentication keys are generated and readily available for you to access whenever needed.
+
+![image](./img/command_tailscale_status.png)
+</details>
+
+<details><summary>Config kubeconfig</summary>
+
+这是一个非常关键的观察！简单直接的回答是：你的 Master Node 的 IP 地址本身通常没有改变，但你现在有了“两个世界”的 IP 地址。
+让我们理清楚这个逻辑：
+1. 为什么你觉得 IP 变了？
+•	原来的 IP (192.168.50.x)： 这是你家里局域网分配给 VM 的地址，只有在家里 Wi-Fi/有线网络下才有效。
+•	现在的 IP (100.85.222.115)： 这是 Tailscale 虚拟网卡 分配的地址。这个 IP 是在全世界任何地方都能直接指向你那台 VM 的“全球唯一地址”。
+你的 Master Node 的物理配置并没有改变，它依然拥有那个 192.168.50.x 的局域网地址。Tailscale 只是在你的 VM 内部安装了一张“虚拟网卡”，就像给这台机器多装了一张可以连通全球的“网卡”。
+2. 你的 Master Node 受影响了吗？
+•	功能上： 完全没有影响。它依然跑着你的 K3s 集群，依然在处理之前的任务。
+•	访问上： 现在你多了一种连接方式。
+•	在家时： 两种 IP 都能用。
+•	在外网时： 必须使用 100.x.x.x，因为局域网 IP 192.168.50.x 在公网是无法路由的。
+3. 给你的重要检查建议
+为了确保你的 K3s 配置不会因为这个 IP 变化而崩溃，请执行以下检查：
+	1.	登录 VM 100 的控制台。
+	2.	输入 ip addr：
+•	你会看到 eth0 (或者是 ens18 等) 有一个 192.168.50.x 的 IP。
+•	你会看到一个叫 tailscale0 的接口，它上面绑定着 100.85.222.115。
+	3.	K3s 的绑定： 你的 K3s 集群默认监听的是 0.0.0.0，这意味着它会自动同时接收来自这两个网卡的请求，所以它是不会因为多了个 IP 而停止工作的。
+总结
+你不需要担心 Master Node 的身份改变了。它只是被 Tailscale “赋能”了，变得可以在任何网络环境下被你找到。
+你需要担心的是 kubeconfig：
+因为你现在的 Kubernetes 集群 API Server 地址可能还是旧的（比如 192.168.50.100），你需要确保在外面通过 Tailscale 访问时，那个地址能被正确解析。这就是为什么我之前强烈建议你将 kubeconfig 中的 server 地址修改为 Tailscale IP 的原因——因为它是一个“全天候通用”的地址。
+你的集群一切正常，明天带出去测试时，只要确保 Mac 连上了热点，然后使用 100.85.222.115 这个 IP 即可。
+
+1. Retrieve the configuration from the k3s-master virtual machine terminal.
+```bash
+ssh master
+
+ls -l /etc/rancher/k3s/k3s.yaml
+sudo cat /etc/rancher/k3s/k3s.yaml
+```
+2. Copy and paste the whole context starting from `apiVersion` to `user` to Mac
+- create folder `mkdir -p ~/.kube`
+- copy and paste context of `k3s.yaml` to `~/.kube/config`
+- override `server: https://127.0.0.1:6443` or `server: https://192.168.50.100:6443` to `server: https://100.85.222.115:6443`
+
+3. Run command `kubectl get nodes` at Mac terminal. Mac now has full administrative access, allowing you to send control commands to 100.85.222.115 through an encrypted Tailscale tunnel—no matter where in the world you are tomorrow
+
+❌ Can't run kubectl command
+![image](./img/failed_run_kubectl_command_from_mac_terminal.png) 
+
+Mac has successfully reached the VM via the Tailscale tunnel, but the K3s API server is not listening on that specific Tailscale IP address.
+Simply put: The tunnel is open, but the door is locked.  
+
+🤔 **Why is this happening?**  
+By default, K3s typically listens only on 127.0.0.1 or the IP address of the primary network interface detected during installation (usually the eth0 IP, 192.168.50.x). It is currently unaware that it should be listening for traffic on the tailscale0 network interface.
+
+💡 **Solution**  
+Help K3s "see" the Tailscale interface
+- Log into k3s-master node, edit the K3s configuration file
+```bash 
+cat /etc/systemd/system/k3s.service
+
+sudo cat <<EOF | sudo tee /etc/systemd/system/k3s.service
+[Unit]
+Description=Lightweight Kubernetes
+Documentation=https://k3s.io
+Wants=network-online.target
+After=network-online.target
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Type=notify
+EnvironmentFile=-/etc/default/%N
+EnvironmentFile=-/etc/sysconfig/%N
+EnvironmentFile=-/etc/systemd/system/k3s.service.env
+KillMode=process
+Delegate=yes
+User=root
+LimitNOFILE=1048576
+LimitNPROC=infinity
+LimitCORE=infinity
+TasksMax=infinity
+TimeoutStartSec=0
+Restart=always
+RestartSec=5s
+ExecStartPre=-/sbin/modprobe br_netfilter
+ExecStartPre=-/sbin/modprobe overlay
+ExecStart=/usr/local/bin/k3s server --tls-san 100.119.185.90
+EOF
+```
+
+![image](./img/k3s_master_k3s_service_1.png)
+
+![image](./img/k3s_master_k3s_service_2.png)
+- Load configuration: `sudo systemctl daemon-reload`
+- Reboot k3s service: `sudo systemctl restart k3s`
+- `sudo ss -tulnp | grep 6443`
+
+![image](check_cluster_from_Mac_terminal.png)
+
+网络连通性： 你已经成功配置了 Kubernetes API Server 监听 Tailscale 网络接口。
+•	TLS 认证： 你已经成功处理了证书认证，使得 Mac 端的 kubectl 能够通过安全的加密隧道与集群通信。
+•	集群管理： 你的 Mac 现在已经成为该 K3s 集群的远程管理终端。
+</details>
+</br>
+
+# Create Proxmox API token before running terraform commands
+
+<details><summary>What is proxmox API Token</summary>
+
+Proxmox API Token enables Terraform to communicate with Proxmox on your behalf.
+
+Terraform must connect to Proxmox PVE node via an API. This is typically achieved using an API ID and an API Token.
+</details>
+
+<details><summary>Create proxmox API Token</summary>
+
+1. Log into PVE (https://100.85.222.115:8006/) 
+2. API Token configuration  
+Datacenter -> Permissions -> API Tokens -> Add
+3. Add permission to terraform-token
+4. Verify token  
+
+```bash
+curl -kv -H "Authorization: PVEAPIToken=root@pam\!terraform-token=1c50f781-99db-48fa-92d4-3feef9af6e6f" https://100.85.222.115:8006/api2/json/nodes
+```
+
+![image](./img/API_token_configuration.png)
+
+![image](./img/API_token_creation.png)
+
+![image](./img/API_token_info.png)
+
+![image](./img/add_permission_to_terraform_token.png)
+
+![image](./img/verify_api_token_1.png)
+> 🚫 Token ID is incorrect in Authorization: PVEAPIToken=root@pamterraform...
+
+![image](./img/verify_api_token_2.png)
 </details>
 </br>
 
@@ -779,202 +963,42 @@ The `main.tf` and `supporting scripts` need to be divided into three layers:
 | Steps | Automation Method |
 | :--- | :--- |
 | Creation/Network/SSH | Terraform proxmox_virtual_environment_vm (using ip_config and user_account for automated configuration) |
-| Preparation | Use the packages list in cloud-init.yaml.tpl to install curl, git, iptables, etc.| 
+| Preparation | Use the packages list in `k3s-master-init.yaml.tpl` and `k3s-worker-init.yaml.tpl` to install curl, git, iptables, etc.| 
 | Install K3s | Execute curl -sfL https://get.k3s.io within the runcmd block |
 | Prometheus/Grafana | Deploy using Helm (via runcmd) or by directly applying the Helm Chart YAML manifests |
 | Validation | Create a simple healthcheck.sh script to run automatically after deployment | 
 
-1. 
+<details><summary>Prepare Terraform repo in an order</summary>
+
+- Phase 1: Infrastructure Foundations (Core Definitions)
+
+| No. | Terraform File | Role in Terraform | Content | Purpose |
+| :--- | :--- | :--- | :--- | :--- |
+| 1 | **provider.tf** | The Foundation | Defines required_providers and the configuration for the proxmox provider | Ensures Terraform knows where to download the provider plugin (bpg/proxmox) and how to connect to your cluster via the API | 
+| 2 | **ariables.tf** | Configuration Abstraction | Defines all variables, such as proxmox_api_token, ssh_public_key, vm_template_id, etc | Decouples sensitive information and configurable parameters from the core logic |
+|	3 |	**main.tf** | Main Logic | Calls resource blocks to create VMs | This is the core of your repository, containing the definition for proxmox_virtual_environment_vm |
+
+- Phase 2: Automated Delivery (Configuration Injection)
+
+| No. | Terraform File | Role in Terraform | Content | Purpose |
+| :--- | :--- | :--- | :--- | :--- |
+|	1 |	k3s-master-init.yaml.tpl | Automation Template | It contains configuration about master node | It is injected into the VM via Terraform’s template file function |
+|	3 |	k3s-worker-init.yaml.tpl | Automation Template | It contains configuration about worker node | It is injected into the VM via Terraform’s template file function |
+| 3 | outputs.tf | Result Feedback | Defines outputs, such as the IP addresses of the created VMs | Allows you to clearly see the connection information for your new machines immediately after running terraform apply |
+
+- Phase 3: variable assignments
+
+| No. | Terraform File | Role in Terraform | Content | Purpose |
+| :--- | :--- | :--- | :--- | :--- |
+|	1 |	terraform.tfvars | variable assigments | for example, proxmox_api_token.</br> 📢❗🚨 Please do not commit this file to a public repository | Contains specific variable assignments |
+|	2 |	.gitignore | Locally files | .terraform/</br> *.tfstate</br>*.tfstate.backup</br>.terraform.lock.hcl</br> terraform.tfvars | Anything that do not necessarily commit to the public repository |
+
+- `Log Tracking`: If the installation fails, check `/var/log/post-install.log` inside the VM; this will be the primary reference for debugging the automation
+
+</details>
 </details>
 </br>
-
-# Create Proxmox API token before running terraform commands
-
-<details><summary>What is proxmox API Token</summary>
-
-Proxmox API Token enables Terraform to communicate with Proxmox on your behalf.
-
-Terraform must connect to Proxmox PVE node via an API. This is typically achieved using an API ID and an API Token.
-</details>
-
-<details><summary>Create proxmox API Token</summary>
-
-1. Log into PVE (https://192.168.50.100:8006/)
-2. API Token configuration  
-Datacenter -> Permissions -> API Tokens -> Add
-3. Add permission to terraform-token
-4. Verify token  
-
-`curl -kv -H "Authorization: PVEAPIToken=root@pam!terraform-token=d6ba2358-e8dc-4c77-b198-60637dc01075" https://100.85.222.115:8006/api2/json/nodes`
-
-![image](./img/API_token_configuration.png)
-
-![image](./img/API_token_creation.png)
-
-![image](./img/API_token_info.png)
-
-![image](./img/add_permission_to_terraform_token.png)
-
-![image](./img/verify_api_token_1.png)
-> 🚫 Token ID is incorrect in Authorization: PVEAPIToken=root@pamterraform...
-
-![image](./img/verify_api_token_2.png)
-
-- Prepare Terraform template
-
-</details>
-</br>
-
-# Install Tailscale 
-<details><summary>What is Tailscale</summary>
-
-TBC
-</details>
-
-<details><summary>Install Tailscale to BeeLink</summary>
-
-1. SSH to PVE `ssh pve`
-2. Run command `curl -fsSL https://tailscale.com/install.sh | sh`
-3. Run command 	`tailscale up` to log into the account via browser, and sign in with Google
-
-![image](./img/tailscale_account.png)
-
-![image](./img/add_beelink_to_tailscale.png)
-</details>
-
-<details><summary>Install Tailscale to Mac</summary>
-
-1. Download Tailscale from App store
-2. Allow VPN Configuration
-
-![image](BeeLink_Mac_in_same_tunnel.png)
-
-</details>
-
-<details><summary>Install Tailscale to K3s-master-node</summary>
-
-Got an error when check k3s master VM status.
-```bash
-root@pve:~# systemctl status k3s
-Unit k3s.service could not be found.
-```
-
-🔧 Fix: Install Tailscale to k3s VM  
-1. Access K3s master VM console 
-2. run command
-```bash
-curl -fsSL https://tailscale.com/install.sh | sh
-sudo tailscale up
-```
-
-K3s master node is now an independent node within your Tailscale network, assigned its own unique 100.x.x.x IP address. The cluster authentication keys are generated and readily available for you to access whenever needed.
-
-![image](command_tailscale_status.png)
-</details>
-
-<details><summary>Config kubeconfig</summary>
-
-这是一个非常关键的观察！简单直接的回答是：你的 Master Node 的 IP 地址本身通常没有改变，但你现在有了“两个世界”的 IP 地址。
-让我们理清楚这个逻辑：
-1. 为什么你觉得 IP 变了？
-•	原来的 IP (192.168.50.x)： 这是你家里局域网分配给 VM 的地址，只有在家里 Wi-Fi/有线网络下才有效。
-•	现在的 IP (100.85.222.115)： 这是 Tailscale 虚拟网卡 分配的地址。这个 IP 是在全世界任何地方都能直接指向你那台 VM 的“全球唯一地址”。
-你的 Master Node 的物理配置并没有改变，它依然拥有那个 192.168.50.x 的局域网地址。Tailscale 只是在你的 VM 内部安装了一张“虚拟网卡”，就像给这台机器多装了一张可以连通全球的“网卡”。
-2. 你的 Master Node 受影响了吗？
-•	功能上： 完全没有影响。它依然跑着你的 K3s 集群，依然在处理之前的任务。
-•	访问上： 现在你多了一种连接方式。
-•	在家时： 两种 IP 都能用。
-•	在外网时： 必须使用 100.x.x.x，因为局域网 IP 192.168.50.x 在公网是无法路由的。
-3. 给你的重要检查建议
-为了确保你的 K3s 配置不会因为这个 IP 变化而崩溃，请执行以下检查：
-	1.	登录 VM 100 的控制台。
-	2.	输入 ip addr：
-•	你会看到 eth0 (或者是 ens18 等) 有一个 192.168.50.x 的 IP。
-•	你会看到一个叫 tailscale0 的接口，它上面绑定着 100.85.222.115。
-	3.	K3s 的绑定： 你的 K3s 集群默认监听的是 0.0.0.0，这意味着它会自动同时接收来自这两个网卡的请求，所以它是不会因为多了个 IP 而停止工作的。
-总结
-你不需要担心 Master Node 的身份改变了。它只是被 Tailscale “赋能”了，变得可以在任何网络环境下被你找到。
-你需要担心的是 kubeconfig：
-因为你现在的 Kubernetes 集群 API Server 地址可能还是旧的（比如 192.168.50.100），你需要确保在外面通过 Tailscale 访问时，那个地址能被正确解析。这就是为什么我之前强烈建议你将 kubeconfig 中的 server 地址修改为 Tailscale IP 的原因——因为它是一个“全天候通用”的地址。
-你的集群一切正常，明天带出去测试时，只要确保 Mac 连上了热点，然后使用 100.85.222.115 这个 IP 即可。
-
-1. Retrieve the configuration from the k3s-master virtual machine terminal.
-```bash
-ssh master
-
-ls -l /etc/rancher/k3s/k3s.yaml
-sudo cat /etc/rancher/k3s/k3s.yaml
-```
-2. Copy and paste the whole context starting from `apiVersion` to `user` to Mac
-- create folder `mkdir -p ~/.kube`
-- copy and paste context of `k3s.yaml` to `~/.kube/config`
-- override `server: https://127.0.0.1:6443` or `server: https://192.168.50.100:6443` to `server: https://100.85.222.115:6443`
-
-3. Run command `kubectl get nodes` at Mac terminal. Mac now has full administrative access, allowing you to send control commands to 100.85.222.115 through an encrypted Tailscale tunnel—no matter where in the world you are tomorrow
-
-❌ Can't run kubectl command
-![image](./img/failed_run_kubectl_command_from_mac_terminal.png) 
-
-Mac has successfully reached the VM via the Tailscale tunnel, but the K3s API server is not listening on that specific Tailscale IP address.
-Simply put: The tunnel is open, but the door is locked.  
-
-🤔 **Why is this happening?**  
-By default, K3s typically listens only on 127.0.0.1 or the IP address of the primary network interface detected during installation (usually the eth0 IP, 192.168.50.x). It is currently unaware that it should be listening for traffic on the tailscale0 network interface.
-
-💡 **Solution**  
-Help K3s "see" the Tailscale interface
-- Log into k3s-master node, edit the K3s configuration file
-```bash 
-cat /etc/systemd/system/k3s.service
-
-sudo cat <<EOF | sudo tee /etc/systemd/system/k3s.service
-[Unit]
-Description=Lightweight Kubernetes
-Documentation=https://k3s.io
-Wants=network-online.target
-After=network-online.target
-
-[Install]
-WantedBy=multi-user.target
-
-[Service]
-Type=notify
-EnvironmentFile=-/etc/default/%N
-EnvironmentFile=-/etc/sysconfig/%N
-EnvironmentFile=-/etc/systemd/system/k3s.service.env
-KillMode=process
-Delegate=yes
-User=root
-LimitNOFILE=1048576
-LimitNPROC=infinity
-LimitCORE=infinity
-TasksMax=infinity
-TimeoutStartSec=0
-Restart=always
-RestartSec=5s
-ExecStartPre=-/sbin/modprobe br_netfilter
-ExecStartPre=-/sbin/modprobe overlay
-ExecStart=/usr/local/bin/k3s server --tls-san 100.119.185.90
-EOF
-```
-
-![image](./img/k3s_master_k3s_service_1.png)
-
-![image](./img/k3s_master_k3s_service_2.png)
-- Load configuration: `sudo systemctl daemon-reload`
-- Reboot k3s service: `sudo systemctl restart k3s`
-- `sudo ss -tulnp | grep 6443`
-
-![image](check_cluster_from_Mac_terminal.png)
-
-网络连通性： 你已经成功配置了 Kubernetes API Server 监听 Tailscale 网络接口。
-•	TLS 认证： 你已经成功处理了证书认证，使得 Mac 端的 kubectl 能够通过安全的加密隧道与集群通信。
-•	集群管理： 你的 Mac 现在已经成为该 K3s 集群的远程管理终端。
-</details>
-</br>
-
-
-
+ 
 # Scale K3s cluster by adding three new worker nodes
 
 
