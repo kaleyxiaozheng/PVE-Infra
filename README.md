@@ -605,7 +605,7 @@ curl -kv -H "Authorization: PVEAPIToken=root@pam\!terraform-token=1c50f781-99db-
 
 # Create K3s master node in PVE UI
 
-<details><summary>👉 Create K3s master node in PVE UI</summary>
+<details><summary>Create K3s master node in PVE UI</summary>
 
 <details><summary>1. Create VM</summary>
 Log in PVE, and click `Create VM`
@@ -950,7 +950,7 @@ Then open chrome and input `http://192.168.50.101:30566`
  
  # Setup K3s cluster from scratch with ubuntu template using Terraform
 
-<details><summary>⚙️ Automated Architecture Plan</summary> 
+<details><summary>Automated Architecture Plan</summary> 
 
 1. Core Architectural Refactoring Strategy:
 
