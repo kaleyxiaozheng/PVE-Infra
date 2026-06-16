@@ -603,7 +603,7 @@ curl -kv -H "Authorization: PVEAPIToken=root@pam\!terraform-token=1c50f781-99db-
 </details>
 </br>
 
-# Create K3s master node in PVE manually and using terraform
+# Create K3s master node in PVE UI
 
 <details><summary>👉 Create K3s master node in PVE UI</summary>
 
@@ -946,10 +946,11 @@ Then open chrome and input `http://192.168.50.101:30566`
 | prometheus-prometheus-node-exporter | | | 
 </details>
 </details>
+</br>
+ 
+ # Setup K3s cluster from scratch with ubuntu template using Terraform
 
-<details><summary>👉 Create K3s master node using terraform</summary>
-
-⚙️ Automated Architecture Plan:  
+<details><summary>⚙️ Automated Architecture Plan</summary> 
 
 1. Core Architectural Refactoring Strategy:
 
@@ -958,7 +959,9 @@ The `main.tf` and `supporting scripts` need to be divided into three layers:
 - Configuration Layer (Cloud-Init user-data): Injects SSH keys, sets hostnames, and installs necessary dependencies upon the VM's first boot.
 - Delivery Layer (Scripts/Ansible): Utilizes remote-exec or the runcmd directive within user-data to execute the installation commands for K3s, Prometheus, and Grafana.
 
-2. Automation Implementation Path
+</details>
+
+<details><summary>Automation Implementation Path</summary>
 
 | Steps | Automation Method |
 | :--- | :--- |
@@ -967,6 +970,8 @@ The `main.tf` and `supporting scripts` need to be divided into three layers:
 | Install K3s | Execute curl -sfL https://get.k3s.io within the runcmd block |
 | Prometheus/Grafana | Deploy using Helm (via runcmd) or by directly applying the Helm Chart YAML manifests |
 | Validation | Create a simple healthcheck.sh script to run automatically after deployment | 
+
+</details>
 
 <details><summary>Prepare Terraform repo in an order</summary>
 
@@ -996,43 +1001,18 @@ The `main.tf` and `supporting scripts` need to be divided into three layers:
 - `Log Tracking`: If the installation fails, check `/var/log/post-install.log` inside the VM; this will be the primary reference for debugging the automation
 
 </details>
-</details>
-</br>
- 
-# Scale K3s cluster by adding three new worker nodes
 
-
-<details><summary>3. Create Worker Nodes</summary>
-
-1. create worker nodes via terrafrom
-
-⛔ Error occurred at command `terraform plan`
-
-![image](./img/terraform_plan_2.png)
-
-🎯 Solution: change provider `bpg/proxmox`
-
-![image](./img/terraform_state_list.png)
-
-<details><summary>💡Tips</summary>
+<details><summary>Verification</summary>
 
 ```bash
-# Remove local state locks and cache
-rm -rf .terraform .terraform.lock.hcl
+terraform validate
 
-# init plugins
-terraform init
+terraform plan -out=tfplan
 
-# genmerate plan
-terraform plan
-
-# check terraform state
-terraform state list
+terraform apply "tfplan"
 ```
 </details>
-</details>
-
-</details></br>
+</br>
 
 # Clean up PVE
 <details><summary>Clean up master node and worker nodes in VPE  </summary>
