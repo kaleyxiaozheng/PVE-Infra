@@ -12,21 +12,15 @@ resource "proxmox_virtual_environment_vm" "master_node" {
   node_name = "pve"
   vm_id     = 101 #  ID of the Master node VM
 
-  clone {
-    vm_id = 100 # pointing to Ubuntu template
+  clone { 
+    vm_id = 100 # pointing to Ubuntu template in PVE 
   }
 
-  cpu {
-    cores = 2
-  }
+  cpu { cores = 2 }
 
-  memory {
-    dedicated = 4096 
-  }
+  memory { dedicated = 4096 }
 
-  agent {
-    enabled = true
-  }
+  agent { enabled = true }
 
   # Cloud-Init initialization for Master node
   initialization {
@@ -36,30 +30,25 @@ resource "proxmox_virtual_environment_vm" "master_node" {
         gateway = "192.168.50.1"
       }
     }
-    datastore_id = "local-lvm"
+    datastore_id      = "local-lvm"
     user_data_file_id = proxmox_virtual_environment_file.master_config.id
   }
 
-  network_device {
-    bridge = "vmbr0"
-  }
+  network_device { bridge = "vmbr0" }
 }
 
 resource "proxmox_virtual_environment_file" "master_config" {
   content_type = "snippets"
   datastore_id = "local"
   node_name    = "pve"
-  source_file {
-    path = local_file.master_config.filename
-  }
-}
 
-resource "local_file" "master_config" {
-  filename = "${path.module}/cloud-configs/k3s-master.yaml"
-  content = templatefile("k3s-master-init.yaml.tpl", {
-    hostname   = "k3s-master-node"
-    ssh_pubkey = var.ssh_public_key
-  })
+  source_raw {
+    data = templatefile("k3s-master-init.yaml.tpl", {
+      hostname   = "k3s-master-node"
+      ssh_pubkey = var.ssh_public_key
+    })
+    file_name = "k3s-master-node.yaml"
+  }
 }
 
 # Create the Worker node VM
@@ -69,18 +58,13 @@ resource "proxmox_virtual_environment_vm" "worker_nodes" {
   node_name = "pve"
   vm_id     = 102 + count.index
 
-  agent {
-    enabled = true
-  }
-
-  cpu {
+  agent { enabled = true }
+  cpu { 
     cores = 2
-    type  = "host"
+    type = "host" 
   }
 
-  memory {
-    dedicated = 3072
-  }
+  memory { dedicated = 3072 }
 
   clone {
     vm_id = 100 # same ID as the template used for master node in PVE
@@ -102,9 +86,7 @@ resource "proxmox_virtual_environment_vm" "worker_nodes" {
   initialization {
     user_data_file_id = proxmox_virtual_environment_file.worker_config[count.index].id
 
-    user_account {
-      username = "kz"
-    }
+    user_account { username = "kz" }
     
     ip_config {
       ipv4 {
@@ -120,20 +102,15 @@ resource "proxmox_virtual_environment_file" "worker_config" {
   datastore_id = "local"
   node_name    = "pve"
 
-  source_file {
-    path = local_file.worker_config[count.index].filename
+  source_raw {
+    data = templatefile("k3s-worker-init.yaml.tpl", {
+      hostname   = "worker-node-${count.index + 1}"
+      ssh_pubkey = var.ssh_public_key
+      master_ip  = "192.168.50.101"
+      k3s_token  = var.k3s_token 
+    })
+    file_name =  "worker-node-${count.index + 1}.yaml"
   }
-}
-
-resource "local_file" "worker_config" {
-  count    = 3
-  filename = "${path.module}/cloud-configs/worker-${count.index + 1}.yaml"
-  content  = templatefile("k3s-worker-init.yaml.tpl", {
-    hostname = "worker-node-${count.index + 1}"
-    ssh_pubkey = var.ssh_public_key
-    master_ip  = "192.168.50.101"
-    k3s_token  = var.k3s_token 
-  })
 }
 
 resource "aws_s3_bucket" "aegis_logic_terraform_state_bucket" {
