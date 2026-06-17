@@ -1007,6 +1007,8 @@ The `main.tf` and `supporting scripts` need to be divided into three layers:
 
 terraform validate
 
+terraform init
+
 terraform plan -out=tfplan
 
 terraform apply "tfplan"
