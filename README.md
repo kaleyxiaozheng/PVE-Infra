@@ -1016,6 +1016,14 @@ terraform apply "tfplan"
 </details>
 </br>
 
+# Setup K3s cluster from scratch using Terraform Module
+1. Extract resource logic to [Terraform-Module](https://github.com/kaleyxiaozheng/Terraform-Module/tree/master/k3s-node) repo 
+2. Update Terraform main.tf file to use module
+3. Run following command in order
+```bash
+terraform init -upgrade
+```
+
 # Clean up PVE
 <details><summary>Clean up master node and worker nodes in VPE  </summary>
 
