@@ -441,7 +441,7 @@ TBC
 1. Download Tailscale from App store
 2. Allow VPN Configuration
 
-![image](BeeLink_Mac_in_same_tunnel.png)
+![image](./img/BeeLink_Mac_in_same_tunnel.png)
 
 </details>
 
