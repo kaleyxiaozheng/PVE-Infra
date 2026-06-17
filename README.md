@@ -1002,6 +1002,9 @@ The `main.tf` and `supporting scripts` need to be divided into three layers:
 <details><summary>Verification</summary>
 
 ```bash
+
+# V1.0.0 in pve-cluster repo
+
 terraform validate
 
 terraform plan -out=tfplan
