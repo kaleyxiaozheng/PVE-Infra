@@ -1004,6 +1004,7 @@ The `main.tf` and `supporting scripts` need to be divided into three layers:
 ```bash
 
 # V1.0.0 in pve-cluster repo
+# Run following commands under terraform folder
 
 terraform validate
 
