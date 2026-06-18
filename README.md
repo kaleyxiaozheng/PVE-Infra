@@ -1021,6 +1021,10 @@ terraform apply "tfplan"
 2. Update Terraform main.tf file to use module
 3. Run following command in order
 ```bash
+# 1. delete module context in cache
+rm -rf .terraform/modules
+
+# 2. Re-init and pull down the latest codes
 terraform init -upgrade
 ```
 
