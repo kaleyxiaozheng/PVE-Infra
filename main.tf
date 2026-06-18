@@ -127,7 +127,7 @@ module "master_node" {
 # }
 
 # create 3 worker nodes using module
-module "k3s_workers" {
+module "k3s-node-module" {
   count  = 3
   source = "git::https://github.com/git@github.com:kaleyxiaozheng/k3s-node-module.git?ref=V1.0.0"
 
