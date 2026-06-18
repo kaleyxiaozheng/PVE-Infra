@@ -2,9 +2,8 @@
 terraform {
   required_providers {
     proxmox = {
-      source    = var.proxmox_provider_source
-      version   = var.proxmox_provider_version
-      api_token = var.proxmox_api_token
+      source  = "bpg/proxmox"
+      version = "0.66.0"
     }
 
     aws = {
