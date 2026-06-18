@@ -1017,7 +1017,7 @@ terraform apply "tfplan"
 </br>
 
 # Setup K3s cluster from scratch using Terraform Module
-1. Extract resource logic to [Terraform-Module](https://github.com/kaleyxiaozheng/Terraform-Module/tree/master/k3s-node) repo 
+1. Extract resource logic to [k3s-node-module](https://github.com/kaleyxiaozheng/k3s-node-module) repo 
 2. Update Terraform main.tf file to use module
 3. Run following command in order
 ```bash
