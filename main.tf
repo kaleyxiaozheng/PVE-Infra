@@ -51,7 +51,7 @@
 #   }
 # }
 
-module "master-node" {
+module "master_node" {
   source = "git@github.com:kaleyxiaozheng/k3s-node-module.git?ref=V1.0.0"
   node_name = "k3s-master-node"
   vm_id     = 101
@@ -127,7 +127,7 @@ module "master-node" {
 # }
 
 # create 3 worker nodes using module
-module "worker-node" {
+module "worker_node" {
   count  = 3
   source = "git@github.com:kaleyxiaozheng/k3s-node-module.git?ref=V1.0.0"
   node_name = "worker-node-${count.index + 1}"
