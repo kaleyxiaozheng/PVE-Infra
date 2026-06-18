@@ -1024,7 +1024,13 @@ terraform apply "tfplan"
 # 1. delete module context in cache
 rm -rf .terraform/modules
 
-# 2. Re-init and pull down the latest codes
+# 2. remove lock file
+rm -f .terraform.lock.hcl
+
+# 3. remove .terrform
+rm -rf .terraform
+
+# 4. Re-init and pull down the latest codes
 terraform init -upgrade
 ```
 
