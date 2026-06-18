@@ -1,9 +1,16 @@
-# output worker node name and IP
+output "master_node_details" {
+  description = "Master node name and IP address"
+  value = {
+    name       = module.master_node.node_name
+    vm_id      = module.master_node.vm_id
+    ipv4       = module.master_node.ipv4_addresses
+  }
+}
+
 output "worker_nodes_details" {
   description = "All Worker node names and IP addresses"
   value = {
-    # access via module output
     for i in range(3) : 
-    module.k3s-node-module.worker_nodes[i].node_name => module.k3s-node-module.worker_nodes[i].ipv4_addresses
+    module.k3s_workers[i].node_name => module.k3s_workers[i].ipv4_addresses
   }
 }
