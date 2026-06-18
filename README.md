@@ -1032,6 +1032,11 @@ rm -rf .terraform
 
 # 4. Re-init and pull down the latest codes
 terraform init -upgrade
+
+# 5. terraform plan and apply
+terraform plan
+terraform apply
+
 ```
 
 # Clean up PVE
