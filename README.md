@@ -1112,9 +1112,21 @@ This is typically because Terraform can only configure the "hardware-level" swit
 | **Virtual Machine** (`VM`) | This is the operating system (Ubuntu) that you access via `kubectl` or `SSH`. You need to install and start the **`qemu-guest-agent daemon`** at this level so that it can send status data back to PVE through the virtual hardware channel |
 
 ⚙️ `Fix`: How to get the Agent running
+Add Agent install and start commands in `k3s-master-init.yaml.tpl` and `k3s-worker-init.yaml.tpl` files
+</details>
 
+<details><summary>Destory and re-create process</summary>
 
+```bash
+# 1. remove 4 VM
+terraform destroy
 
+# 2. verify
+terraform state list
+
+# 3. re-create
+terraform apply
+```
 </details>
 </details>
 
