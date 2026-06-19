@@ -15,10 +15,15 @@ packages:
   - qemu-guest-agent
 
 runcmd:
-  # 1. Start Agent
+  # 1. install and start Agent
+  - apt-get update
+  - apt-get install -y qemu-guest-agent
+  - systemctl daemon-reload
   - systemctl enable --now qemu-guest-agent
+  - systemctl restart qemu-guest-agent
+  
   # 2. waiting for Master node avaialble
-  - until curl -s -k https://${master_ip}:6443/readyz; do sleep 5; done
+  - until ping -c 1 google.com; do sleep 2; done
 
   # 3. install K3s Agent and join to Master
   # injecting the K3S_URL and K3S_TOKEN variables using Terraform

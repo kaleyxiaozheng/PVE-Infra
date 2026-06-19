@@ -27,8 +27,13 @@ write_files:
       ${indent(6, file("scripts/post-install.sh"))}
 
 runcmd:
-  # Start Agent
+  # install and start Agent
+  - apt-get update
+  - apt-get install -y qemu-guest-agent
+  - systemctl daemon-reload
   - systemctl enable --now qemu-guest-agent
+  - systemctl restart qemu-guest-agent
+  
   # install K3s
   - curl -sfL https://get.k3s.io | sh -
 

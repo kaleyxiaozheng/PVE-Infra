@@ -1117,6 +1117,7 @@ Add Agent install and start commands in `k3s-master-init.yaml.tpl` and `k3s-work
 
 <details><summary>Destory and re-create process</summary>
 
+1. Terraform commands
 ```bash
 # 1. remove 4 VM
 terraform destroy
@@ -1127,8 +1128,23 @@ terraform state list
 # 3. re-create
 terraform apply
 ```
+
+2. Manually
+- remove 4 VM from PVE
+- clean up `pve->local(pve)->Snippets`
+- 
+```bash
+# 1. Force remove these orphaned VMs from the Terraform state to prevent errors during the next apply
+terraform state rm $(terraform state list)
+
+# 2. re-init and apply
+terraform init -upgrade
+terraform apply
+```
+
 </details>
 </details>
+</br>
 
 # Clean up PVE
 <details><summary>Clean up master node and worker nodes in VPE  </summary>
