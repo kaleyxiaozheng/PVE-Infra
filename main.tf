@@ -7,7 +7,7 @@ module "master_node" {
   memory    = 4096
   static_ip = "192.168.50.101/24"
   gateway   = "192.168.50.1"
-  user_data = templatefile("k3s-master-init.yaml.tpl", {
+  user_data = templatefile(local.k3s_templates.master, {
     hostname   = "k3s-master-node"
     ssh_pubkey = var.ssh_public_key
   })
@@ -20,7 +20,7 @@ module "worker_node" {
   vm_id     = 102 + count.index
   memory    = 3072
   
-  user_data = templatefile("k3s-worker-init.yaml.tpl", {
+  user_data = templatefile(local.k3s_templates.worker, {
     hostname   = "worker-node-${count.index + 1}"
     ssh_pubkey = var.ssh_public_key
     master_ip  = "192.168.50.101"

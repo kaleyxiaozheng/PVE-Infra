@@ -1,6 +1,8 @@
 hostname: ${hostname}
 fqdn: ${hostname}.local
 manage_etc_hosts: true
+package_update: true
+
 users:
   - name: kz
     ssh_authorized_keys:
@@ -11,6 +13,7 @@ packages:
   - curl
   - git
   - helm
+  - qemu-guest-agent
 
 # import local scripts to VM using write_files
 # install a post-installation script to deal with Helm and Prometheus installation after K3s is ready
@@ -24,9 +27,11 @@ write_files:
       ${indent(6, file("scripts/post-install.sh"))}
 
 runcmd:
+  # Start Agent
+  - systemctl enable --now qemu-guest-agent
   # install K3s
   - curl -sfL https://get.k3s.io | sh -
 
-  # run asynchronously
+  # run post-install scripts asynchronously
   # Asynchronous Execution: nohup ... & allows the Cloud-Init process to complete (preventing your VM boot process from hanging) while the installation logic continues to run silently in the background
   - nohup /usr/local/bin/post-install.sh > /var/log/post-install.log 2>&1 &

@@ -1017,6 +1017,8 @@ terraform apply "tfplan"
 </br>
 
 # Setup K3s cluster from scratch using Terraform Module
+<details><summary>Create and setup k3s cluster using Terraform Module and Commands</summary>
+
 1. Extract resource logic to [k3s-node-module](https://github.com/kaleyxiaozheng/k3s-node-module) repo 
 2. Update Terraform main.tf file to use module
 3. Run following command in order
@@ -1035,9 +1037,86 @@ terraform init -upgrade
 
 # 5. terraform plan and apply
 terraform plan
-terraform apply
 
+# 6. To prevent deadlocks caused by resource contention, limit the Terraform concurrency during the next execution to ensure resources are created sequentially rather than in parallel
+terraform apply -parallelism=1
 ```
+</details>
+
+<details><summary>Verififcation</summary>
+
+To ensure K3s cluster is fully ready, perform the following steps:
+1. Check IP address assignment:
+In the Proxmox Web GUI, check the "Summary" page for each of the 4 VMs. Typically, a few minutes after the VM boots up, the `qemu-guest-agent` installed within the image will automatically sync the IP address to PVE.
+2. Verify Cloud-Init injection:
+Since used `source_raw` to pass the `user_data` directly, it is recommended to access the console of one of the nodes:
+- Run sudo `cat /var/lib/cloud/instance/user-data.txt` to verify that your configuration was injected correctly.
+- If no IP address is assigned, check the console for any error logs related to network configuration.
+3. The fundamental first step to confirm that all nodes are online and have successfully joined the cluster.
+- Run the command on the master node:
+```bash
+kubectl get nodes
+kubectl get pods -n kube-system
+```
+4. Check Prometheus status
+- Run the command on the master node: 
+```bash
+# check Prometheus Pod under monitoring namespace
+kubectl get pods -n monitoring
+```
+- If the pods are running properly, we need to verify that they are actually collecting data. Map the service to the local machine using `kubectl port-forward`
+```bash
+kubectl port-forward svc/prometheus-server -n monitoring 9090:80
+```
+然后在浏览器打开 http://localhost:9090，进入 Status -> Targets 页面。
+•	核心指标：Targets 页面
+这是最关键的检查点。在该页面中：
+•	Node Exporter：你应该能看到所有 Worker 节点的地址，且状态应为 UP（绿色）。
+•	如果状态是 DOWN（红色），说明 Prometheus 无法连接到节点的 node-exporter。
+3. 验证数据采集情况（PromQL 查询）
+进入 Prometheus UI 的 Graph 页面，输入以下查询语句，看看是否能查到数据：
+•	检查节点存活：up{job="node-exporter"}
+•	如果有数据且值为 1，说明 Prometheus 已经成功采集到了该节点的指标。
+•	检查集群负载：node_load1
+•	如果能看到图形化数值，说明数据流入正常。
+4. 常见排查点（如果发现异常）
+如果监控没数据或显示 DOWN，请检查以下两点：
+	1.	网络互通性：Prometheus 必须能够通过内网访问到各个 Worker 节点的 9100 端口（这是 node-exporter 的默认端口）。你可以从 Prometheus Pod 内部 telnet 一下节点端口：
+kubectl exec -it <prometheus-pod-name> -n monitoring -- /bin/sh
+# 然后在里面执行
+nc -zv <worker-node-ip> 9100
+
+	2.	ServiceMonitor/PodMonitor 配置：如果你是用 Prometheus Operator 安装的，确保对应的 ServiceMonitor 资源已经创建，并指定了正确的 matchLabels 来关联你的 exporter 服务。
+
+</details>
+
+<details><summary>🧰 Troubleshooting</summary>
+
+<details><summary>👉 Guest Agent not running</summary>
+
+![image](./img/guest_agent_not_running.png)
+
+This usually means that even though the virtual machine has booted, the QEMU Guest Agent service is either not running or not installed at all.
+
+The purpose of this agent is to allow Proxmox to gain deeper insight into the virtual machine (such as IP addresses, memory usage, and more precise shutdown commands).
+
+The definition `agent { enabled = true }` in Terraform is correct. It instructs Proxmox to enable hardware support for the QEMU Guest Agent for that specific virtual machine.
+
+### 🤷‍♀️ Why does the Agent still show "not running" inside the VM?
+
+This is typically because Terraform can only configure the "hardware-level" switch; it cannot install or start software services inside the virtual machine (at the operating system level). Even if you have set `enabled = true` in Terraform, if the corresponding `qemu-guest-agent package` is not installed inside the VM (Ubuntu), the Proxmox interface will still display "Agent not running."
+
+｜Distinguish | Purpose |
+| :--- | :--- |
+| **PVE Host** (`the hypervisor`) | This is where you manage the "Infrastructure as Code" via Terraform. The only action required on the PVE side is enabling the **`QEMU Guest Agent`** checkbox under Options, which is a hardware-level configuration. |
+| **Virtual Machine** (`VM`) | This is the operating system (Ubuntu) that you access via `kubectl` or `SSH`. You need to install and start the **`qemu-guest-agent daemon`** at this level so that it can send status data back to PVE through the virtual hardware channel |
+
+⚙️ `Fix`: How to get the Agent running
+
+
+
+</details>
+</details>
 
 # Clean up PVE
 <details><summary>Clean up master node and worker nodes in VPE  </summary>
