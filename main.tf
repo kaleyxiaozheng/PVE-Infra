@@ -20,6 +20,10 @@ module "worker_node" {
   node_name = "worker-node-${count.index + 1}"
   vm_id     = 102 + count.index
   memory    = 3072
+
+  # assign unique static IPs to each worker node
+  static_ip = "192.168.50.${102 + count.index}/24"
+  gateway   = "192.168.50.1"
   
   user_data = templatefile(local.k3s_templates.worker, {
     hostname   = "worker-node-${count.index + 1}"

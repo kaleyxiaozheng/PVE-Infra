@@ -1,0 +1,271 @@
+pve-cluster/scripts/bootstrap-master.sh:
+
+# bootstrap-master.sh
+#!/bin/bash
+# Start Agent
+apt-get update && apt-get install -y qemu-guest-agent curl git helm
+systemctl enable --now qemu-guest-agent
+
+# install K3s
+curl -sfL https://get.k3s.io | sh -
+
+# ensure all are ready and then install Helm/Prometheus 
+[ -f /usr/local/bin/post-install.sh ] && /usr/local/bin/post-install.sh
+-------------------------------------------------------------------------
+pve-cluster/scripts/bootstrap-worker.sh:
+
+# bootstrap-worker.sh
+#!/bin/bash
+apt-get update && apt-get install -y qemu-guest-agent curl git
+systemctl enable --now qemu-guest-agent
+
+# waiting for Master API port
+until nc -zv ${master_ip} 6443; do sleep 5; done
+
+# join K3s cluster
+curl -sfL https://get.k3s.io | K3S_URL=https://${master_ip}:6443 K3S_TOKEN=${k3s_token} sh -
+-------------------------------------------------------------------------
+pve-cluster/scripts/post-install.sh:
+
+#post-install.sh
+
+#!/bin/bash
+  
+# wait for K3s to start and generate kubeconfig file
+until [ -f /etc/rancher/k3s/k3s.yaml ]; do sleep 5; done
+export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+
+# wait for API Server to be available
+until kubectl get nodes; do sleep 5; done
+
+# install Helm and Prometheus
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+helm install prometheus prometheus-community/kube-prometheus-stack --create-namespace --namespace monitoring
+
+# waiting for installation to complete and then remove the script itself (to keep the environment clean)
+rm /usr/local/bin/post-install.sh
+-------------------------------------------------------------------------
+pve-cluster/templates/k3s-master-init.yaml.tpl:
+
+#k3s-master-init
+hostname: ${hostname}
+fqdn: ${hostname}.local
+manage_etc_hosts: true
+package_update: true
+
+users:
+  - name: kz
+    ssh_authorized_keys:
+      - ${ssh_pubkey}
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+
+write_files:
+  - path: /usr/local/bin/bootstrap.sh
+    permissions: '0755'
+    content: |
+      ${indent(6, file("scripts/bootstrap-master.sh"))}
+  - path: /usr/local/bin/post-install.sh
+    permissions: '0755'
+    content: |
+      ${indent(6, file("scripts/post-install.sh"))}
+
+runcmd:
+  - nohup /usr/local/bin/bootstrap.sh > /var/log/bootstrap.log 2>&1 &
+-------------------------------------------------------------------------
+pve-cluster/templates/k3s-worker-init.yaml.tpl:
+
+#k3s-worker-init
+hostname: ${hostname}
+fqdn: ${hostname}.local
+manage_etc_hosts: true
+package_update: true
+
+users:
+  - name: kz
+    ssh_authorized_keys:
+      - ${ssh_pubkey}
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+
+write_files:
+  - path: /usr/local/bin/bootstrap.sh
+    permissions: '0755'
+    content: |
+      ${indent(6, file("scripts/bootstrap-worker.sh"))}
+
+runcmd:
+  # Must use nohup to run the process in the background, otherwise it will block Cloud-Init
+  - nohup /usr/local/bin/bootstrap.sh > /var/log/bootstrap.log 2>&1 &
+-------------------------------------------------------------------------
+pve-cluster/backend.tf
+
+# backend.tf
+terraform {
+  backend "s3" {
+    bucket = "aegis-logic-terraform-state-bucket"
+    key    = "terraform.tfstate" # path in the bucket to store the state file
+    region = "ap-southeast-2"
+    use_lockfile = true
+    encrypt      = true
+  }
+}:
+
+-------------------------------------------------------------------------
+pve-cluster/local.tf:
+
+# local.tf
+locals {
+  common_tags = {
+    Project     = local.project_prefix
+    Environment = local.env
+    ManagedBy   = "terraform"
+  }
+
+  project_prefix = "aegis-logic"
+  env            = "dev"
+
+  k3s_templates = {
+    master = "${path.module}/templates/k3s-master-init.yaml.tpl"
+    worker = "${path.module}/templates/k3s-worker-init.yaml.tpl"
+  }
+}
+
+-------------------------------------------------------------------------
+pve-cluster/main.tf
+
+# main.tf
+
+module "master_node" {
+  source    = "git@github.com:kaleyxiaozheng/k3s-node-module.git?ref=v1.0.0"
+  node_name = "k3s-master-node"
+  vm_id     = 101
+  memory    = 4096
+  static_ip = "192.168.50.101/24"
+  gateway   = "192.168.50.1"
+  user_data = templatefile(local.k3s_templates.master, {
+    hostname   = "k3s-master-node"
+    ssh_pubkey = var.ssh_public_key
+    k3s_token  = var.k3s_token
+  })
+}
+
+module "worker_node" {
+  count     = 3
+  source    = "git@github.com:kaleyxiaozheng/k3s-node-module.git?ref=v1.0.0"
+  node_name = "worker-node-${count.index + 1}"
+  vm_id     = 102 + count.index
+  memory    = 3072
+  
+  user_data = templatefile(local.k3s_templates.worker, {
+    hostname   = "worker-node-${count.index + 1}"
+    ssh_pubkey = var.ssh_public_key
+    master_ip  = "192.168.50.101"
+    k3s_token  = var.k3s_token
+  })
+}
+
+resource "aws_s3_bucket" "aegis_logic_terraform_state_bucket" {
+  bucket = "${local.project_prefix}-${local.common_tags.ManagedBy}-state-bucket"
+}
+-------------------------------------------------------------------------
+pve-cluster/output.tf
+
+# output.tf
+
+output "master_node_details" {
+  description = "Master node name and IP address"
+  value = {
+    name       = module.master_node.node_name
+    vm_id      = module.master_node.vm_id
+    ipv4       = module.master_node.ipv4_addresses
+  }
+}
+
+output "worker_nodes_details" {
+  description = "All Worker node names and IP addresses"
+  value = {
+    for i in range(3) : 
+      "${module.worker_node[i].node_name}" => {
+        vm_id = module.worker_node[i].vm_id
+        ipv4 = module.worker_node[i].ipv4_addresses
+      }
+  }
+}
+
+-------------------------------------------------------------------------
+pve-cluster/provider.tf
+
+# provider.tf
+terraform {
+  required_providers {
+    proxmox = {
+      source  = "bpg/proxmox"
+      version = "0.66.0"
+    }
+
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
+provider "proxmox" {
+  endpoint  = var.proxmox_api_url
+  api_token = var.proxmox_api_token
+  insecure  = true
+
+  ssh {
+    username   = "root"
+    private_key = file(var.ssh_private_key_path) 
+  }
+}
+
+provider "aws" {
+  alias  = "sydney"
+  region = "ap-southeast-2"
+}
+
+-------------------------------------------------------------------------
+pve-cluster/variables.tf
+
+# variables.tf
+variable "proxmox_api_url" {
+  description = "Proxmox API address"
+  type        = string
+  default     = "https://192.168.50.100:8006/"
+}
+
+variable "proxmox_api_token" {
+  description = "Proxmox API Token (format: user@realm!tokenid=tokenvalue)"
+  type        = string
+  sensitive   = true  # Terraform will not display it in plain text in the logs
+}
+
+variable "ssh_private_key_path" {
+  description = "SSH private key path for connecting to Proxmox nodes"
+  type        = string
+  default     = "/Users/kaleyzheng/.ssh/id_ed25519"
+}
+
+variable "k3s_token" {
+  description = "The token used for K3s node joining"
+  type        = string
+  sensitive   = true  # true to prevent it from being displayed in logs, as it's a sensitive value
+}
+
+variable "ssh_public_key" { 
+  description = "Path to the SSH public key for node access"
+  type = string 
+  sensitive   = true  # true to prevent it from being displayed in logs, as it's a sensitive value
+}
+
+-------------------------------------------------------------------------
+pve-cluster/terraform.tfvars
+
+proxmox_api_token = "root@pam!terraform-token=1c50f781-99db-48fa-92d4-3feef9af6e6f"
+ssh_public_key    = "/Users/kaleyzheng/.ssh/id_ed25519.pub"
+k3s_token         = "my-secret-token-12345"
+
+
+-------------------------------------------------------------------------
