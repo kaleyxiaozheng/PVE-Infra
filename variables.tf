@@ -29,3 +29,9 @@ variable "ssh_public_key" {
   default = "~/.ssh/id_ed25519"
   sensitive   = true  # true to prevent it from being displayed in logs, as it's a sensitive value
 }
+
+variable "tailscale_auth_key" {
+  description = "Tailscale auth key for node connectivity"
+  type        = string
+  sensitive   = true  # true to prevent it from being displayed in logs, as it's a sensitive value
+}
