@@ -1,7 +1,7 @@
 # main.tf
 
 module "master_node" {
-  source = "git@github.com:kaleyxiaozheng/k3s-node-module.git?ref=V1.0.0"
+  source = "git@github.com:kaleyxiaozheng/k3s-node-module.git?ref=var.k3s-node-module"
   node_name = "k3s-master-node"
   vm_id     = 101
   memory    = 4096
@@ -15,7 +15,7 @@ module "master_node" {
 
 module "worker_node" {
   count  = 3
-  source = "git@github.com:kaleyxiaozheng/k3s-node-module.git?ref=V1.0.0"
+  source = "git@github.com:kaleyxiaozheng/k3s-node-module.git?ref=var.k3s-node-module"
   node_name = "worker-node-${count.index + 1}"
   vm_id     = 102 + count.index
   memory    = 3072

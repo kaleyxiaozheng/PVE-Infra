@@ -28,3 +28,8 @@ variable "ssh_public_key" {
   type = string 
   sensitive   = true  # true to prevent it from being displayed in logs, as it's a sensitive value
 }
+
+variable "k3s-node-module" { 
+  description = "Path to the K3s node module source"
+  type = string 
+}
