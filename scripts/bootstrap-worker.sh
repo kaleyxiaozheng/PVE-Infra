@@ -1,4 +1,4 @@
-#k3s-master-init
+#cloud-config
 hostname: ${hostname}
 fqdn: ${hostname}.local
 manage_etc_hosts: true
@@ -14,11 +14,8 @@ write_files:
   - path: /usr/local/bin/bootstrap.sh
     permissions: '0755'
     content: |
-      ${indent(6, file("../scripts/bootstrap-master.sh"))}
-  - path: /usr/local/bin/post-install.sh
-    permissions: '0755'
-    content: |
-      ${indent(6, file("../scripts/post-install.sh"))}
+      ${indent(6, file("../scripts/bootstrap-worker.sh"))}
 
 runcmd:
+  # Must use nohup to run the process in the background, otherwise it will block Cloud-Init
   - nohup /usr/local/bin/bootstrap.sh > /var/log/bootstrap.log 2>&1 &
