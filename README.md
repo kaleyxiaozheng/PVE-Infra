@@ -417,6 +417,21 @@ qm config 100
 
 ![image](./img/check_ubuntu_template_using_command.png)
 </details>
+
+<details><summary>💡 Remove Not Secure from browser address</summary>
+
+The **Not Secure** warning and the red line in the browser address bar appear because you are accessing the Proxmox VE web interface using an SSL/TLS certificate that your browser cannot verify.
+
+![image](./img/not_secure_signal.png)
+
+⚙️ Fix 
+```bash
+# 1. download certificate to Mac
+scp root@100.85.222.115:/etc/pve/pve-root-ca.pem ~/Desktop/
+
+# 2. intall pem to Mac
+```
+</details>
 </br>
 
 # Install Tailscale 

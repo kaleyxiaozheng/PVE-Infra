@@ -1,3 +1,4 @@
+#k3s-master-init.yaml.tpl 
 hostname: ${hostname}
 fqdn: ${hostname}.local
 manage_etc_hosts: true
@@ -13,7 +14,6 @@ packages:
   - curl
   - git
   - helm
-  - qemu-guest-agent
 
 # import local scripts to VM using write_files
 # install a post-installation script to deal with Helm and Prometheus installation after K3s is ready
@@ -30,11 +30,13 @@ runcmd:
   # install and start Agent
   - apt-get update
   - apt-get install -y qemu-guest-agent
-  - systemctl daemon-reload
   - systemctl enable --now qemu-guest-agent
   - systemctl restart qemu-guest-agent
   
-  # install K3s
+  # install other tools
+  - apt-get install -y helm
+  
+  #install K3s
   - curl -sfL https://get.k3s.io | sh -
 
   # run post-install scripts asynchronously
