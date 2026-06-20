@@ -1129,6 +1129,7 @@ This is typically because Terraform can only configure the "hardware-level" swit
 ⚙️ `Fix`: How to get the Agent running
 Add Agent install and start commands in `k3s-master-init.yaml.tpl` and `k3s-worker-init.yaml.tpl` files
 </details>
+</details>
 
 <details><summary>Destory and re-create process</summary>
 
@@ -1156,8 +1157,6 @@ terraform state rm $(terraform state list)
 terraform init -upgrade
 terraform apply
 ```
-
-</details>
 </details>
 </br>
 
