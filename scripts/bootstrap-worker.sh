@@ -1,21 +1,9 @@
-#cloud-config
-hostname: ${hostname}
-fqdn: ${hostname}.local
-manage_etc_hosts: true
-package_update: true
+#!/bin/bash
+apt-get update && apt-get install -y qemu-guest-agent curl git
+systemctl enable --now qemu-guest-agent
 
-users:
-  - name: kz
-    ssh_authorized_keys:
-      - ${ssh_pubkey}
-    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+# waiting for Master API port
+until nc -zv ${master_ip} 6443; do sleep 5; done
 
-write_files:
-  - path: /usr/local/bin/bootstrap.sh
-    permissions: '0755'
-    content: |
-      ${indent(6, file("../scripts/bootstrap-worker.sh"))}
-
-runcmd:
-  # Must use nohup to run the process in the background, otherwise it will block Cloud-Init
-  - nohup /usr/local/bin/bootstrap.sh > /var/log/bootstrap.log 2>&1 &
+# join K3s cluster
+curl -sfL https://get.k3s.io | K3S_URL=https://${master_ip}:6443 K3S_TOKEN=${k3s_token} sh -

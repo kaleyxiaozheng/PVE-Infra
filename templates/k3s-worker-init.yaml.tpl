@@ -1,4 +1,4 @@
-k3s-worker-init.yaml.tpl 
+#k3s-worker-init
 hostname: ${hostname}
 fqdn: ${hostname}.local
 manage_etc_hosts: true
@@ -10,20 +10,12 @@ users:
       - ${ssh_pubkey}
     sudo: ['ALL=(ALL) NOPASSWD:ALL']
 
-packages:
-  - curl
-  - git
+write_files:
+  - path: /usr/local/bin/bootstrap.sh
+    permissions: '0755'
+    content: |
+      ${indent(6, file("${path.root}/scripts/bootstrap-worker.sh"))}
 
 runcmd:
-  # 1. install and start Agent
-  - apt-get update
-  - apt-get install -y qemu-guest-agent
-  - systemctl enable --now qemu-guest-agent
-  - systemctl restart qemu-guest-agent
-  
-  # 2. waiting for Master node avaialble
-  - until nc -zv ${master_ip} 6443; do sleep 5; done
-
-  # 3. install K3s Agent and join to Master
-  # injecting the K3S_URL and K3S_TOKEN variables using Terraform
-  - curl -sfL https://get.k3s.io | K3S_URL=https://${master_ip}:6443 K3S_TOKEN=${k3s_token} sh -
+  # Must use nohup to run the process in the background, otherwise it will block Cloud-Init
+  - nohup /usr/local/bin/bootstrap.sh > /var/log/bootstrap.log 2>&1 &
