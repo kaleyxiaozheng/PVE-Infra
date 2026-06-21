@@ -6,7 +6,6 @@ package_update: true
 
 users:
   - name: kz
-    hashed_password: '$6$ZaAVgAByfXdJnaHn$EVQ2.D35MIa.VwFpMMpYBifyDVW8r.V6sIvQGckHVC4UetZ2.hLy1ojot3wPHFziF/Xj1mxu3/feWndlV6y9G/'
     ssh_authorized_keys:
       - ${ssh_pubkey}
     sudo: ['ALL=(ALL) NOPASSWD:ALL']

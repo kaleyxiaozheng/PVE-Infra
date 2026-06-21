@@ -11,7 +11,6 @@ module "master_node" {
     hostname           = "k3s-master-node"
     ssh_pubkey         = file(var.ssh_public_key)
     k3s_token          = var.k3s_token
-    tailscale_auth_key = var.tailscale_auth_key
   })
 }
 
@@ -31,10 +30,10 @@ module "worker_node" {
     ssh_pubkey = file(var.ssh_public_key)
     master_ip  = "192.168.50.101"
     k3s_token  = var.k3s_token
-    tailscale_auth_key = var.tailscale_auth_key
   })
 }
 
 resource "aws_s3_bucket" "aegis_logic_terraform_state_bucket" {
+  provider = aws.sydney
   bucket = "${local.project_prefix}-${local.common_tags.ManagedBy}-state-bucket"
 }

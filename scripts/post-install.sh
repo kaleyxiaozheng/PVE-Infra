@@ -4,19 +4,34 @@ LOG_FILE="/var/log/post-install.log"
 exec > >(tee -a ${LOG_FILE}) 2>&1
 
 echo "Starting post-install configuration..."
-  
+
+TIMEOUT=600 
+START_TIME=$(date +%s)
+
+check_timeout() {
+    CURRENT_TIME=$(date +%s)
+    if [ $((CURRENT_TIME - START_TIME)) -gt $TIMEOUT ]; then
+        echo "Error: Timeout reached during configuration."
+        exit 1
+    fi
+}
+
 # wait for K3s to start and generate kubeconfig file
 until [ -f /etc/rancher/k3s/k3s.yaml ]; do 
   echo "Waiting for k3s.yaml..."
-  sleep 5
+  check_timeout
+  sleep 10
 done
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 
 # wait for API Server to be available
 until kubectl get nodes >/dev/null 2>&1; do
     echo "Waiting for API server..."
-    sleep 5
+    check_timeout
+    sleep 10
 done
+
+set -e
 
 # install Helm and Prometheus
 echo "Installing Prometheus stack..."
@@ -32,11 +47,6 @@ else
 fi
 
 # waiting for installation to complete and then remove the script itself (to keep the environment clean)
-if [ $? -eq 0 ]; then
-    echo "Post-install completed successfully."
-    # 清理操作可以放在最后，或者保留以便日后排查
-    rm -f /usr/local/bin/post-install.sh
-else
-    echo "Post-install failed. Please check logs."
-    exit 1
-fi
+set +e
+echo "Post-install completed successfully."
+rm -f /usr/local/bin/post-install.sh
