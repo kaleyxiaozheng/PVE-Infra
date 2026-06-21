@@ -31,7 +31,7 @@ variable "ssh_public_key" {
 }
 
 variable "tailscale_auth_key" {
-  description = "Tailscale auth key for node connectivity"
+  description = "Tailscale auth key for node registration"
   type        = string
   sensitive   = true  # true to prevent it from being displayed in logs, as it's a sensitive value
 }

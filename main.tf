@@ -31,6 +31,7 @@ module "worker_node" {
     ssh_pubkey = file(var.ssh_public_key)
     master_ip  = "192.168.50.101"
     k3s_token  = var.k3s_token
+    tailscale_auth_key = var.tailscale_auth_key
   })
 }
 

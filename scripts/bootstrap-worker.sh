@@ -1,4 +1,9 @@
 #!/bin/bash
+
+# install Tailscale
+curl -fsSL https://tailscale.com/install.sh | sh
+tailscale up --authkey=${tailscale_auth_key} --hostname=${hostname} 
+
 apt-get update && apt-get install -y qemu-guest-agent curl git
 systemctl enable --now qemu-guest-agent
 
