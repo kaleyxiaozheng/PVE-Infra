@@ -9,7 +9,7 @@ module "master_node" {
   gateway   = "192.168.50.1"
   user_data = templatefile(local.k3s_templates.master, {
     hostname           = "k3s-master-node"
-    ssh_pubkey         = var.ssh_public_key
+    ssh_pubkey         = file(var.ssh_public_key)
     k3s_token          = var.k3s_token
     tailscale_auth_key = var.tailscale_auth_key
   })
@@ -28,7 +28,7 @@ module "worker_node" {
   
   user_data = templatefile(local.k3s_templates.worker, {
     hostname   = "worker-node-${count.index + 1}"
-    ssh_pubkey = var.ssh_public_key
+    ssh_pubkey = file(var.ssh_public_key)
     master_ip  = "192.168.50.101"
     k3s_token  = var.k3s_token
   })
