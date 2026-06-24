@@ -23,6 +23,8 @@ module "worker_node" {
   node_name = "worker-node-${count.index + 1}"
   vm_id     = 102 + count.index
   memory    = 3072
+  ssh_public_key_content = file(var.ssh_public_key) # fetch the content of the SSH public key file and pass it to the module
+  vm_password = var.vm_password # pass the VM password variable to the module for cloud-init use  
 
   # assign unique static IPs to each worker node
   static_ip = "192.168.50.${102 + count.index}/24"
