@@ -4,12 +4,6 @@ fqdn: ${hostname}.local
 manage_etc_hosts: true
 package_update: true
 
-users:
-  - name: kz
-    ssh_authorized_keys:
-      - ${ssh_pubkey}
-    sudo: ['ALL=(ALL) NOPASSWD:ALL']
-
 write_files:
   - path: /usr/local/bin/bootstrap.sh
     permissions: '0755'

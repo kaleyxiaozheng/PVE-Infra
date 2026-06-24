@@ -26,6 +26,12 @@ variable "k3s_token" {
 variable "ssh_public_key" { 
   description = "Path to the SSH public key for node access"
   type = string 
-  default = "~/.ssh/id_ed25519.pub"
+  default = "/Users/kaleyzheng/.ssh/id_ed25519.pub"
   sensitive   = true  # true to prevent it from being displayed in logs, as it's a sensitive value
+}
+
+variable "vm_password" { 
+  type = string
+  sensitive = true 
+  description = "Password for user ubuntu on the VMs (if needed for cloud-init)"
 }
