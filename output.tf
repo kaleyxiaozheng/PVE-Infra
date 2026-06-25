@@ -21,7 +21,7 @@ output "worker_nodes_details" {
 output "ssh_instructions" {
   description = "Run these commands to SSH into your nodes"
   value = {
-    master_ssh = "ssh kz@k3s-master-node"
-    worker_ssh = [for i in range(3) : "ssh kz@worker-node-${i + 1}"]
+    master_ssh = "ssh ubuntu@{module.master_node.ipv4_addresses[0]}"
+    worker_ssh = [for i in range(3) : "ssh ubuntu@{module.worker_node[i].ipv4_addresses[0]}"]
   }
 }

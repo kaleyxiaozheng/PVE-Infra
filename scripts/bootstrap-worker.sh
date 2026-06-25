@@ -1,18 +1,22 @@
 #!/bin/bash
 
+USER="ubuntu"
+HOME_DIR="/home/$USER"
+
 # create ubuntu user if it doesn't exist
-if ! id "ubuntu" &>/dev/null; then
-  useradd -m -s /bin/bash ubuntu
+if ! id "$USER" &>/dev/null; then
+  useradd -m -s /bin/bash $USER
+  usermod -aG sudo $USER
 fi
-echo "ubuntu:${vm_password}" | chpasswd
-usermod -aG sudo ubuntu
+echo "$USER:${vm_password}" | chpasswd
+usermod -aG sudo $USER
 
 # set up SSH key for ubuntu user
-mkdir -p /home/ubuntu/.ssh
-echo "${ssh_pubkey}" > /home/ubuntu/.ssh/authorized_keys
-chmod 700 /home/ubuntu/.ssh
-chmod 600 /home/ubuntu/.ssh/authorized_keys
-chown -R ubuntu:ubuntu /home/ubuntu/.ssh
+mkdir -p $HOME_DIR/.ssh
+echo "${ssh_pubkey}" > $HOME_DIR/.ssh/authorized_keys
+chmod 700 $HOME_DIR/.ssh
+chmod 600 $HOME_DIR/.ssh/authorized_keys
+chown -R $USER:$USER $HOME_DIR/.ssh
 
 # enable password authentication for SSH (if needed for cloud-init)
 sed -i 's/^#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
