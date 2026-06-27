@@ -1,4 +1,5 @@
-#k3s-master-init
+#k3s-master-init.yaml.tpl
+
 hostname: ${hostname}
 fqdn: ${hostname}.local
 manage_etc_hosts: true

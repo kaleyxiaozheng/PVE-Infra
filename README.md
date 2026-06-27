@@ -288,7 +288,7 @@ terraform init
 </details>
 </br>
 
-# Create ubuntu template in PVE manually and using command
+# Create ubuntu template in PVE in three ways
 <details><summary>👉 Create ubuntu template in PVE UI</summary>
 
 1. Create a basci VM
@@ -416,6 +416,10 @@ qm config 100
 ```
 
 ![image](./img/check_ubuntu_template_using_command.png)
+</details>
+
+<details><summary>👉 Create ubuntu template using terraform</summary>
+
 </details>
 
 <details><summary>💡 Remove Not Secure from browser address</summary>

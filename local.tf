@@ -1,4 +1,5 @@
 # local.tf
+
 locals {
   common_tags = {
     Project     = local.project_prefix

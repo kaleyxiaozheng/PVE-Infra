@@ -1,4 +1,26 @@
 # variables.tf
+
+# ubuntu-template configuration
+variable "pve_node" {
+  type    = string
+  default = "pve"
+}
+
+variable "vm_id" {
+  type    = number
+  default = 998
+}
+
+variable "datastore" {
+  type    = string
+  default = "local-lvm"
+}
+
+variable "vm_name" {
+  type    = string
+  default = "ubuntu-template-tf"
+}
+
 variable "proxmox_api_url" {
   description = "Proxmox API address"
   type        = string
@@ -23,7 +45,7 @@ variable "k3s_token" {
   sensitive   = true  # true to prevent it from being displayed in logs, as it's a sensitive value
 }
 
-variable "ssh_public_key" { 
+variable "ssh_public_key_path" { 
   description = "Path to the SSH public key for node access"
   type = string 
   default = "/Users/kaleyzheng/.ssh/id_ed25519.pub"
@@ -34,4 +56,10 @@ variable "vm_password" {
   type = string
   sensitive = true 
   description = "Password for user ubuntu on the VMs (if needed for cloud-init)"
+}
+
+variable "node_type" {
+  type        = string
+  description = "Node type: master or worker"
+  default     = "worker" 
 }

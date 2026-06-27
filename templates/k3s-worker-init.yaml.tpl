@@ -1,4 +1,5 @@
-#k3s-worker-init
+#k3s-worker-init.yaml.tpl
+
 hostname: ${hostname}
 fqdn: ${hostname}.local
 manage_etc_hosts: true
