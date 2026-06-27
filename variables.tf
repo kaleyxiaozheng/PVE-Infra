@@ -63,3 +63,9 @@ variable "node_type" {
   description = "Node type: master or worker"
   default     = "worker" 
 }
+
+variable "node_module_version" {
+  type        = string
+  description = "Version of the k3s-node-module to use"
+  default     = "v1.0.0"
+}
