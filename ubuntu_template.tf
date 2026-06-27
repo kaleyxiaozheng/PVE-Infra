@@ -1,6 +1,6 @@
 # ubuntu_template.tf
 
-resource "proxmox_virtual_machine" "ubuntu_template" {
+resource "proxmox_virtual_machine_vm" "ubuntu_template" {
   name      = var.vm_name
   node_name = var.pve_node
   vm_id     = var.vm_id

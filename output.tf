@@ -1,12 +1,12 @@
 # output.tf
 
 output "template_id" {
-  value       = proxmox_virtual_machine.ubuntu_template.vm_id
+  value       = proxmox_virtual_machine_vm.ubuntu_template.vm_id
   description = "The ubuntu template ID of the created template"
 }
 
 output "template_name" {
-  value       = proxmox_virtual_machine.ubuntu_template.name
+  value       = proxmox_virtual_machine_vm.ubuntu_template.name
   description = "The name of the created template"
 }
 
