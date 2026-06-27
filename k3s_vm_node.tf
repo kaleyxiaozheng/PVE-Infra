@@ -17,7 +17,7 @@ module "master_node" {
     k3s_token          = var.k3s_token
   })
 
-  depends_on = [proxmox_virtual_machine.ubuntu_template] # Ensure the master node is created after the template
+  depends_on = [proxmox_virtual_environment_vm.ubuntu_template] # Ensure the master node is created after the template
 }
 
 module "worker_node" {
