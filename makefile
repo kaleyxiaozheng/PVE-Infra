@@ -12,7 +12,7 @@ init:
 	terraform init
 
 plan:
-	terraform plan	
+	cd k3s-node-module && terraform plan
 
 # 1. Deploy template: explicitly specify the target
 apply-template:
