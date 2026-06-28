@@ -2,13 +2,17 @@
 
 help:
 	@echo "  make init           - Initialise Terraform"
-	@echo "  make apply-template - Create Ubuntu templateonlyh"
+	@echo "  make plan            - Show Terraform plan"
+	@echo "  make apply-template - Create Ubuntu template"
 	@echo "  make apply-nodes    - Deploy K3s nodes (automatically depends on template)"
 	@echo "  make destroy-nodes  - Destroy K3s nodes (keep template)"
 	@echo "  make clean          - Clean local Terraform cache"
 
 init:
 	terraform init
+
+plan:
+	terraform plan	
 
 # 1. Deploy template: explicitly specify the target
 apply-template:
