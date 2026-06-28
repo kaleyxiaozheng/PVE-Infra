@@ -8,7 +8,7 @@ variable "pve_node" {
 
 variable "vm_id" {
   type    = number
-  default = 998
+  default = 999
 }
 
 variable "datastore" {
