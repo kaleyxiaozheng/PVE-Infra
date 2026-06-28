@@ -2,7 +2,7 @@
 
 help:
 	@echo "  make init           - Initialise Terraform"
-	@echo "  make plan            - Show Terraform plan"
+	@echo "  make plan           - Show Terraform plan"
 	@echo "  make apply-template - Create Ubuntu template"
 	@echo "  make apply-nodes    - Deploy K3s nodes (automatically depends on template)"
 	@echo "  make destroy-nodes  - Destroy K3s nodes (keep template)"
