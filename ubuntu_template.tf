@@ -4,7 +4,7 @@ resource "proxmox_virtual_environment_vm" "ubuntu_template" {
   name      = var.vm_name
   node_name = var.pve_node
   vm_id     = var.vm_id
-  template  = true # mark it as template
+  # template  = true # mark it as template
 
   # hardware configuration
   memory {
@@ -45,9 +45,28 @@ resource "proxmox_virtual_environment_vm" "ubuntu_template" {
   # Cloud-Init configuration
   initialization {
     datastore_id = var.datastore
+
+    user_data_file_id = proxmox_virtual_environment_file.cloud_config.id
+
     user_account {
       username = "ubuntu"
       keys     = [file(var.ssh_public_key_path)]
       }
+    ip_config {
+      ipv4 {
+        address = "dhcp"
+      }
     }
+  }
+}
+
+resource "proxmox_virtual_environment_file" "cloud_config" {
+  content_type = "snippets"
+  datastore_id = "local"
+  node_name    = var.pve_node
+
+  source_raw {
+    data      = file("${path.module}/ubuntu_template.yaml")
+    file_name = "ubuntu_template.yaml"
+  }
 }
