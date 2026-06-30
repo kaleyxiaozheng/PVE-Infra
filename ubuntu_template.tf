@@ -45,13 +45,13 @@ resource "proxmox_virtual_environment_vm" "ubuntu_template" {
   # Cloud-Init configuration
   initialization {
     datastore_id = var.datastore
-
     user_data_file_id = proxmox_virtual_environment_file.cloud_config.id
-
+    
     user_account {
       username = "ubuntu"
       keys     = [file(var.ssh_public_key_path)]
       }
+
     ip_config {
       ipv4 {
         address = "dhcp"

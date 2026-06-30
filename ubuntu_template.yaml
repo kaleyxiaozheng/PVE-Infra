@@ -1,4 +1,3 @@
-# ubuntu_template.yaml
 #cloud-config
 package_update: true
 packages:
