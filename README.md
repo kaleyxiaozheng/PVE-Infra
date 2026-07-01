@@ -289,7 +289,10 @@ terraform init
 </br>
 
 # Create ubuntu template in PVE in three ways
-<details><summary>👉 Create ubuntu template in PVE UI</summary>
+<details><summary>👉 Create ubuntu template in PVE UI (Recommended)</summary>
+
+</br>
+⭐ Create a template through PVE UI won't raise Terraform state drift issue.
 
 1. Create a basci VM
 
@@ -420,6 +423,14 @@ qm config 100
 
 <details><summary>👉 Create ubuntu template using terraform</summary>
 
+1. run following command under folder PVE-Infra
+```bash
+make init
+make apply-template
+```
+</details>
+
+<details><summary> </summary>
 </details>
 
 <details><summary>💡 Remove Not Secure from browser address</summary>
