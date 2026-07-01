@@ -392,7 +392,7 @@ wget https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.i
 
 # 2. Create a template and import disk
 # create an empty VM with ID 100
-qm create 999 --name "ubuntu-template" --memory 2048 --cores 2 --net0 virtio,bridge=vmbr0
+qm create 999 --name "ubuntu-template" --memory 4096 --cores 2 --net0 virtio,bridge=vmbr0
 
 # 2. import image to local-lvm
 qm importdisk 100 jammy-server-cloudimg-amd64.img local-lvm
