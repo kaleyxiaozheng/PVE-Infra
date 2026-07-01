@@ -1,10 +1,10 @@
-# ubuntu_template.tf
+# main.tf
 
 resource "proxmox_virtual_environment_vm" "ubuntu_template" {
-  name      = var.vm_name
-  node_name = var.pve_node
-  vm_id     = var.vm_id
-  # template  = true # mark it as template
+  name      = "ubuntu-template"
+  node_name = "pve"
+  vm_id     = 999
+  template  = true # mark it as template
 
   # hardware configuration
   memory {
@@ -50,5 +50,21 @@ resource "proxmox_virtual_environment_vm" "ubuntu_template" {
       username = "ubuntu"
       keys     = [file(var.ssh_public_key_path)]
       }
+  }
+
+  # Automatic Cleanup and Conversion
+  provisioner "local-exec" {
+    command = <<EOT
+      echo "Waiting for template VM to be ready..."
+      sleep 10
+      
+      echo "Cleaning up template..."
+      ssh -o StrictHostKeyChecking=no ubuntu@${var.template_ip} "sudo cloud-init clean && sudo truncate -s 0 /etc/machine-id && sudo rm -f /etc/ssh/ssh_host_* && sudo poweroff"
+      
+      echo "Converting VM ${self.vm_id} to Template on PVE host..."
+      ssh -o StrictHostKeyChecking=no root@${var.pve_host_ip} "qm template ${self.vm_id}"
+      
+      echo "Template conversion complete."
+    EOT
   }
 }

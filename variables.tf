@@ -1,24 +1,18 @@
 # variables.tf
 
-# ubuntu-template configuration
-variable "pve_node" {
-  type    = string
-  default = "pve"
+variable "template_ip" {
+  description = "Static IP for the Ubuntu template VM"
+  type        = string
 }
 
-variable "vm_id" {
-  type    = number
-  default = 999
+variable "pve_host_ip" {
+  description = "IP address of the Proxmox host"
+  type        = string
 }
 
 variable "datastore" {
   type    = string
   default = "local-lvm"
-}
-
-variable "vm_name" {
-  type    = string
-  default = "ubuntu-template-tf"
 }
 
 variable "proxmox_api_url" {
