@@ -329,7 +329,7 @@ terraform init
 
 ![image](./img/add_cloudinit_driver_3.png)
 
-3. tart VM ubuntu-template and complete VM configuration by clicking console
+3. Start VM ubuntu-template and complete VM configuration by clicking console
 - Remove CD/DVD drive from hardware and verify boot order
 
 ![image](./img/ubuntu_template_boot_order_1.png)
