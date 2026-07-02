@@ -401,6 +401,13 @@ sudo rm /etc/ssh/ssh_host_*
 sudo cloud-init clean
 
 sudo truncate -s 0 /etc/machine-id
+
+# verify
+cat /etc/machine-id # expected empty line
+
+ls /etc/ssh/ssh_host_* # expected "No such file or directory"
+
+cloud-init status # expected "disabled" or "not run" for cloud-init clean
 ```
 
 9. shut vm
