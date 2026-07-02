@@ -294,7 +294,9 @@ terraform init
 </br>
 ⭐ Create a template through PVE UI won't raise Terraform state drift issue.
 
-1. Create a basci VM (ubuntu-template) with ID 999
+1. Download [Ubuntu Server 24.04.4 LTS](https://ubuntu.com/download/server/thank-you?version=24.04.4&architecture=amd64&lts=true)
+
+2. Create a basci VM (ubuntu-template) with ID 999
 
 ![image](./img/basic_vm_1.png)
 
@@ -322,14 +324,14 @@ terraform init
 ⚠️ This is a mandatory requirement for the proxmox_vm_qemu resource in Terraform to communicate with the cloned virtual machine, inject your SSH public key, and apply network configurations.
 
 🔴🟠🟡🟢🔵🟣 🔴🟠🟡🟢🔵🟣 🔴🟠🟡🟢🔵🟣 🔴🟠🟡🟢🔵🟣 
-2. add Cloud Init Drive
+3. add Cloud Init Drive
 ![image](./img/add_cloudinit_driver_1.png)
 
 ![image](./img/add_cloudinit_driver_2.png)
 
 ![image](./img/add_cloudinit_driver_3.png)
 
-3. Start VM ubuntu-template and complete VM configuration by clicking console
+4. Start VM ubuntu-template and complete VM configuration by clicking console
 - Remove CD/DVD drive from hardware and verify boot order
 
 ![image](./img/ubuntu_template_boot_order_1.png)
@@ -337,9 +339,29 @@ terraform init
 ![image](./img/ubuntu_template_boot_order_2.png)
 
 ![image](./img/configue_vm_template_1.png)
-password: 123456
 
 ![image](./img/configue_vm_template_2.png)
+
+![image](./img/configue_vm_template_3.png)
+
+![image](./img/configue_vm_template_4.png)
+
+![image](./img/configue_vm_template_5.png)
+
+![image](./img/configue_vm_template_6.png)
+
+![image](./img/configue_vm_template_7.png)
+
+![image](./img/configue_vm_template_8.png)
+
+![image](./img/configue_vm_template_9.png)
+password: 123456
+
+![image](./img/configue_vm_template_10.png)
+
+![image](./img/configue_vm_template_11.png)
+
+![image](./img/configue_vm_template_12.png)
 
 ✅: Install OpenSSH server
 
@@ -350,7 +372,7 @@ This eliminates the need to open the Proxmox web-based console every time
 
 ![image](./img/login_ubuntu_template_vm.png)
 
-4. Run following command 
+5. Run following command 
 ```bash
 # 1. Update package list and install essential tools
 sudo apt update
@@ -370,11 +392,11 @@ sudo poweroff
 💡 Knowledge   
 - Cloud-Init is used only at the very beginning when the VM first boots. It handles initial tasks like setting your SSH keys, hostname, and user creation.
 - QEMU Guest Agent is a background service that runs inside your VM while it is operating. It acts as a permanent communication bridge between the Proxmox host and the guest OS.
-5. convert ubuntu-template vm to template
+6. convert ubuntu-template vm to template
 
 ![image](./img/convert_ubuntu_template_vm_to_template.png)
 
-6. convert ubuntu-template to normal vm
+7. convert ubuntu-template to normal vm
 - Run following command under `pve shell`
 ```bash
 # remove template tag using sed command
