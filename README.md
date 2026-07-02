@@ -363,8 +363,11 @@ password: 123456
 
 ![image](./img/ubuntu_template_boot_order_1.png)
 
-![image](./img/ubuntu_template_boot_order_2.png)
-✅: Install OpenSSH server
+7. reset username and password in cloud init seciton, click regenerate image and reset vm
+
+![image](./img/cloud_init_username_password.png)
+
+6. Install OpenSSH server
 
 The system will automatically install and configure the SSH service during the OS installation process. By doing this—and once you have completed the installation, cleaned up the instance, and converted the VM into a template—you will be able to remotely access these nodes via SSH directly.
 This eliminates the need to open the Proxmox web-based console every time 
