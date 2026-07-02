@@ -313,6 +313,8 @@ terraform init
 
 ![image](./img/basic_vm_8.png)
 
+![image](./img/basic_vm_9.png)
+
 🔴🟠🟡🟢🔵🟣 🔴🟠🟡🟢🔵🟣 🔴🟠🟡🟢🔵🟣 🔴🟠🟡🟢🔵🟣 
 
 ‼️ To automate deployments using Terraform, ensure that a Cloud-Init Drive is added to Ubuntu VM template hardware configuration (select "Add" -> "CloudInit Drive" in the Proxmox interface) after installing the Ubuntu OS.
@@ -327,7 +329,10 @@ terraform init
 
 ![image](./img/add_cloudinit_driver_3.png)
 
-3. Start VM ubuntu-template and complete VM configuration by clicking console
+3. tart VM ubuntu-template and complete VM configuration by clicking console
+- Remove CD/DVD drive from hardware and verify boot order
+
+![image](./img/ubuntu_template_boot_order_1.png)
 
 ![image](./img/configu_vm_template_1.png)
 password: 12345
