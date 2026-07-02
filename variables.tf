@@ -1,19 +1,19 @@
 # variables.tf
 
-variable "template_ip" {
-  description = "Static IP for the Ubuntu template VM"
-  type        = string
-}
+# variable "template_ip" {
+#   description = "Static IP for the Ubuntu template VM"
+#   type        = string
+# }
 
-variable "pve_host_ip" {
-  description = "IP address of the Proxmox host"
-  type        = string
-}
+# variable "pve_host_ip" {
+#   description = "IP address of the Proxmox host"
+#   type        = string
+# }
 
-variable "datastore" {
-  type    = string
-  default = "local-lvm"
-}
+# variable "datastore" {
+#   type    = string
+#   default = "local-lvm"
+# }
 
 variable "proxmox_api_url" {
   description = "Proxmox API address"
