@@ -333,6 +333,7 @@ terraform init
 password: 12345
 
 ![image](./img/configu_vm_template_2.png)
+
 ✅: Install OpenSSH server
 
 The system will automatically install and configure the SSH service during the OS installation process. By doing this—and once you have completed the installation, cleaned up the instance, and converted the VM into a template—you will be able to remotely access these nodes via SSH directly.
@@ -359,7 +360,9 @@ sudo truncate -s 0 /etc/machine-id
 # 4. shut vm
 sudo poweroff
 ```
-
+💡 Knowledge   
+- Cloud-Init is used only at the very beginning when the VM first boots. It handles initial tasks like setting your SSH keys, hostname, and user creation.
+- QEMU Guest Agent is a background service that runs inside your VM while it is operating. It acts as a permanent communication bridge between the Proxmox host and the guest OS.
 5. convert ubuntu-template vm to template
 
 ![image](./img/convert_ubuntu_template_vm_to_template.png)
