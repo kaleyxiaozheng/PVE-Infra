@@ -334,10 +334,12 @@ terraform init
 
 ![image](./img/ubuntu_template_boot_order_1.png)
 
-![image](./img/configu_vm_template_1.png)
-password: 12345
+![image](./img/ubuntu_template_boot_order_2.png)
 
-![image](./img/configu_vm_template_2.png)
+![image](./img/configue_vm_template_1.png)
+password: 123456
+
+![image](./img/configue_vm_template_2.png)
 
 ✅: Install OpenSSH server
 
