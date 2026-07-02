@@ -363,20 +363,11 @@ password: 123456
 
 ![image](./img/ubuntu_template_boot_order_1.png)
 
-7. reset username and password in cloud init seciton, click regenerate image and reset vm
+6. reset username and password in cloud init seciton, click regenerate image and reset vm
 
 ![image](./img/cloud_init_username_password.png)
 
-6. Install OpenSSH server
-
-The system will automatically install and configure the SSH service during the OS installation process. By doing this—and once you have completed the installation, cleaned up the instance, and converted the VM into a template—you will be able to remotely access these nodes via SSH directly.
-This eliminates the need to open the Proxmox web-based console every time 
-
-- remove iso from CD/DVD Drive and reboot the vm
-
-![image](./img/login_ubuntu_template_vm.png)
-
-5. Run following command 
+7. Log into 999 vm and install Guest Agent 
 ```bash
 # 1. Update package list and install essential tools
 sudo apt update
@@ -386,13 +377,37 @@ sudo apt install -y qemu-guest-agent cloud-init
 # This allows Proxmox to correctly identify and display the virtual machine's IP address and manage it effectively.
 sudo systemctl enable --now qemu-guest-agent
 
-# 3. Clean the environment for template conversion
-sudo cloud-init clean
-sudo truncate -s 0 /etc/machine-id
+# verify
+systemctl status qemu-guest-agent
 
-# 4. shut vm
+cloud-init status
+```
+
+![image](./img/enable_qemu_guest_agent.png)
+
+![image](./img/qemu_guest_agent_verify_1.png)
+
+![image](./img/qemu_guest_agent_verify_2.png)
+
+8. Clean up the environment characters for template conversion
+```bash
+# clean up cache
+sudo apt clean
+
+# remove old SSH host key (prevent SSH fingerprint clash from cloned VM)
+sudo rm /etc/ssh/ssh_host_*
+
+# clean up cloud-init
+sudo cloud-init clean
+
+sudo truncate -s 0 /etc/machine-id
+```
+
+9. shut vm
+```bash
 sudo poweroff
 ```
+
 💡 Knowledge   
 - Cloud-Init is used only at the very beginning when the VM first boots. It handles initial tasks like setting your SSH keys, hostname, and user creation.
 - QEMU Guest Agent is a background service that runs inside your VM while it is operating. It acts as a permanent communication bridge between the Proxmox host and the guest OS.
