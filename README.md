@@ -332,11 +332,6 @@ terraform init
 ![image](./img/add_cloudinit_driver_3.png)
 
 4. Start VM ubuntu-template and complete VM configuration by clicking console
-- Remove CD/DVD drive from hardware and verify boot order
-
-![image](./img/ubuntu_template_boot_order_1.png)
-
-![image](./img/ubuntu_template_boot_order_2.png)
 
 ![image](./img/configue_vm_template_1.png)
 
@@ -363,6 +358,12 @@ password: 123456
 
 ![image](./img/configue_vm_template_12.png)
 
+
+5. Remove CD/DVD drive from hardware and verify boot order
+
+![image](./img/ubuntu_template_boot_order_1.png)
+
+![image](./img/ubuntu_template_boot_order_2.png)
 ✅: Install OpenSSH server
 
 The system will automatically install and configure the SSH service during the OS installation process. By doing this—and once you have completed the installation, cleaned up the instance, and converted the VM into a template—you will be able to remotely access these nodes via SSH directly.
