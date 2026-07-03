@@ -8,6 +8,7 @@ module "master_node" {
   memory                 = 4096
   static_ip              = "192.168.50.101/24"
   gateway                = "192.168.50.1"
+  ssh_private_key_path = var.ssh_private_key_path # pass the SSH private key path variable to the module  
   ssh_public_key_content = file(var.ssh_public_key_path) # fetch the content of the SSH public key file and pass it to the module
   vm_password            = var.vm_password # pass the VM password variable to the module for cloud-init use  
   k3s_token  = var.k3s_token
@@ -23,6 +24,7 @@ module "worker_node" {
   static_ip              = "192.168.50.${102 + count.index}/24"
   gateway                = "192.168.50.1"
   master_ip              = "192.168.50.101"
+  ssh_private_key_path   = var.ssh_private_key_path # pass the SSH private key path to the module for SSH access
   ssh_public_key_content = file(var.ssh_public_key_path) # fetch the content of the SSH public key file and pass it to the module
   vm_password = var.vm_password # pass the VM password variable to the module for cloud-init use  
   k3s_token  = var.k3s_token
