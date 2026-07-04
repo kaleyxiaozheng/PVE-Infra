@@ -288,7 +288,7 @@ terraform init
 </details>
 </br>
 
-# Create ubuntu template in PVE in three ways
+# Create ubuntu template in PVE
 <details><summary>👉 Create ubuntu template in PVE UI (Recommended)</summary>
 
 </br>
@@ -439,58 +439,6 @@ cat /etc/pve/qemu-server/101.conf
 - Cloud-Init is used only at the very beginning when the VM first boots. It handles initial tasks like setting your SSH keys, hostname, and user creation.
 - QEMU Guest Agent is a background service that runs inside your VM while it is operating. It acts as a permanent communication bridge between the Proxmox host and the guest OS.
 
-</details>
-
-<details><summary>👉 Create ubuntu template using command in PVE shell</summary>
-
-```bash
-# 1. download Ubuntu Cloud Image
-cd /var/lib/vz/template/iso/
-
-wget https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img
-
-
-# 2. Create a template and import disk
-# create an empty VM with ID 100
-qm create 999 --name "ubuntu-template" --memory 4096 --cores 2 --net0 virtio,bridge=vmbr0
-
-# 2. import image to local-lvm
-qm importdisk 100 jammy-server-cloudimg-amd64.img local-lvm
-
-# 3. Mount the imported virtual disk SCSI0
-qm set 100 --scsihw virtio-scsi-pci --scsi0 local-lvm:vm-100-disk-0
-
-# 4. configure Cloud-init
-# Configure the boot order
-qm set 100 --boot c --bootdisk scsi0
-# add Cloud-Init driver (the key to enable automated injection)
-qm set 100 --ide2 local-lvm:cloudinit
-# Enable serial console output for easier debugging
-qm set 100 --serial0 socket --vga serial0
-
-# 5. set Guest Agent
-qm set 100 --agent 1
-
-# 6. convert vm 100 to ubuntu template
-qm template 100
-
-# 7. check ubuntu-template configure
-qm config 100
-```
-
-![image](./img/check_ubuntu_template_using_command.png)
-</details>
-
-<details><summary>👉 Create ubuntu template using terraform</summary>
-
-1. run following command under folder PVE-Infra
-```bash
-make init
-make apply-template
-```
-</details>
-
-<details><summary> </summary>
 </details>
 
 <details><summary>💡 Remove Not Secure from browser address</summary>
@@ -693,136 +641,29 @@ curl -kv -H "Authorization: PVEAPIToken=root@pam\!terraform-token=1c50f781-99db-
 </details>
 </br>
 
-# Create K3s master node in PVE UI
+# Set up k3s cluster 
 
-<details><summary>1. Create VM</summary>
-Log in PVE, and click `Create VM`
+<details><summary>1. create vm nodes</summary>
 
-![image](./img/login_pve_create_mv.png)
-
-- General
-![image](./img/create_vm_general.png)
-
-- os
-![image](./img/create_vm_os.png)
-
-- system
-![image](./img/create_vm_system.png)
-❗Tick `Qemu Agent`, then PVE is able to correctly monitor VM memory usage and IP addresses.
-
-- disk
-![image](./img/create_vm_disk.png)
-
-- cpu
-![image](./img/create_vm_cpu.png)
-
-
-|‼️ CPU configuration | value | Explanation |
-| :--- | :--- | :--- |
-| Cores | 2 | While K3s is a lightweight Kubernetes distribution with modest resource requirements, a single CPU core will struggle significantly when handling container scheduling, networking plugins, and internal health checks |
-| Type | host | This is the most critical performance optimization setting in PVE. By selecting host, the virtual machine will directly access all features of your Beelink physical CPU (such as AES encryption acceleration, virtualization extensions, etc.). If host is not selected, the CPU will be emulated as a generic, lower-performance model, resulting in unnecessary performance degradation | 
-
-- memory
-![image](./img/create_vm_memory.png)
-
-- network
-![image](./img/create_vm_network.png)
-- `Bridge`: vmbr0: This is the core bridging mode in PVE. It acts as if you are plugging your virtual machine into a virtual Ethernet cable that is directly connected to your physical router's switch. This allows your VM to obtain an IP address in the same subnet as your physical machine, making it easy to access via SSH directly from your MacBook Air.
-- `Model`: VirtIO (paravirtualized): This is the highest-performance network driver for Linux virtual machines. By utilizing paravirtualization technology, it enables network throughput between the VM and the host to achieve near-physical level latency.
-
-</details>
-
-<details><summary>2. Configue Network</summary>
-
-- Start k3s-master server
-- Click upper right `console` 
-- Choose `Continue without updating`
-- Choose `"Ubuntu Server (minimized)`
-- At Network connections, edit `Edit IPv4` , override Automatic (DHCP) to Manual.
-
-| Configure | Value |
-| :--- | :--- |
-| Subnet | 192.168.50.0/24 |
-| Address | 192.168.50.101 |
-| Gateway | 192.168.50.1 |
-| Name servers | 8.8.8.8, 1.1.1.1 |
-
-- ![image](./img/ubuntu_mirror_configuration.png)
-
-- ![image](./img/ubuntu_storage_configuration.png)
-
-- ![image](./img/ubuntu_storage_summary.png)
-
-- ![image](./img/ubuntu_profile_configuration.png)
-
-- ![image](./img/ubuntu_SSH_configuration.png)
-
-- Reboot 
-![image](./img/ubuntu_reboot_now.png)
-
-- error
-![image](./img/reboot_now_error.png)
-This is because when the system finished installing and rebooted, the virtual machine was still trying to boot from the "virtual installation disc (ISO)."
-
-- fix the error: remove the iso from CD/DVD Drive 
-![image](./img/remove_iso.png)
-
-- Log into k3s-master node 
-> 1.  via current VM: username: kz
-
-![image](./img/login_master_via_VM.png)
-
-> 2. via Mac terminal
-
-![image](./img/login_master_via_mac_terminal.png)
-
-</details>
-
-<details><summary>3. Setup private key and public key</summary>
-
-To avoid input password when logging to master node and worker nodes
+- Run following command under folder path `PVE-cluster` 
 ```bash
-# generate private key and public key
-ssh-keygen -t ed25519
-
-# send public key to k3s master node
-# The system will prompt you for the password one last time; after that, it will automatically save the public key into the server's ~/.ssh/authorized_keys file
-ssh-copy-id kz@192.168.50.101
-
-# verify, no password required
-ssh kz@192.168.50.101
+make help
+make init
+make apply-nodes
 ```
-
-- Setup ~/.ssh/config file to manage all servers
-```bash
-Host master
-    HostName 192.168.50.101
-    User kz
-
-Host worker1
-    HostName 192.168.50.102
-    User kz
-```
-
-```bash
-# verify, login to master node
-ssh master
-```
-
-Since I already have private and public key pair locally, so just need to run command `ssh-copy-id kz@192.168.50.101` from Mac terminal
-
-![image](./img/private_public_key_pair.png)
-
-![image](./img/copy_private_key_to_k3s_master_node.png)
-
-- setup configuration file
-
-![image](./img/config_file_configuration.png)
 
 - log into k3s master node after configuring ~/.ssh/config file
 
 ![image](./img/login_master_node_after_config_file_configuration.png)
 
+- To use kubectl conveniently in the long term, you can either change the file permissions to be readable by your current user or copy the file to your home directory.
+```bash
+sudo chmod 644 /etc/rancher/k3s/k3s.yaml
+echo "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml" >> ~/.bashrc
+source ~/.bashrc
+```
+
+![image](./img/kubectl_command_1.png)
 </details>
 
 <details><summary>4. Essential preparation tasks before deploy K3s cluster</summary>
@@ -1035,103 +876,7 @@ Then open chrome and input `http://192.168.50.101:30566`
 </details>
 </br>
  
- # Setup K3s cluster from scratch with ubuntu template using Terraform
 
-<details><summary>Automated Architecture Plan</summary> 
-
-1. Core Architectural Refactoring Strategy:
-
-The `main.tf` and `supporting scripts` need to be divided into three layers:
-- IaC Layer (Terraform): Responsible for creating VMs, configuring networking, and attaching Cloud-Init configurations.
-- Configuration Layer (Cloud-Init user-data): Injects SSH keys, sets hostnames, and installs necessary dependencies upon the VM's first boot.
-- Delivery Layer (Scripts/Ansible): Utilizes remote-exec or the runcmd directive within user-data to execute the installation commands for K3s, Prometheus, and Grafana.
-
-</details>
-
-<details><summary>Automation Implementation Path</summary>
-
-| Steps | Automation Method |
-| :--- | :--- |
-| Creation/Network/SSH | Terraform proxmox_virtual_environment_vm (using ip_config and user_account for automated configuration) |
-| Preparation | Use the packages list in `k3s-master-init.yaml.tpl` and `k3s-worker-init.yaml.tpl` to install curl, git, iptables, etc.| 
-| Install K3s | Execute curl -sfL https://get.k3s.io within the runcmd block |
-| Prometheus/Grafana | Deploy using Helm (via runcmd) or by directly applying the Helm Chart YAML manifests |
-| Validation | Create a simple healthcheck.sh script to run automatically after deployment | 
-
-</details>
-
-<details><summary>Prepare Terraform repo in an order</summary>
-
-- Phase 1: Infrastructure Foundations (Core Definitions)
-
-| No. | Terraform File | Role in Terraform | Content | Purpose |
-| :--- | :--- | :--- | :--- | :--- |
-| 1 | **provider.tf** | The Foundation | Defines required_providers and the configuration for the proxmox provider | Ensures Terraform knows where to download the provider plugin (bpg/proxmox) and how to connect to your cluster via the API | 
-| 2 | **ariables.tf** | Configuration Abstraction | Defines all variables, such as proxmox_api_token, ssh_public_key, vm_template_id, etc | Decouples sensitive information and configurable parameters from the core logic |
-|	3 |	**main.tf** | Main Logic | Calls resource blocks to create VMs | This is the core of your repository, containing the definition for proxmox_virtual_environment_vm |
-
-- Phase 2: Automated Delivery (Configuration Injection)
-
-| No. | Terraform File | Role in Terraform | Content | Purpose |
-| :--- | :--- | :--- | :--- | :--- |
-|	1 |	k3s-master-init.yaml.tpl | Automation Template | It contains configuration about master node | It is injected into the VM via Terraform’s template file function |
-|	3 |	k3s-worker-init.yaml.tpl | Automation Template | It contains configuration about worker node | It is injected into the VM via Terraform’s template file function |
-| 3 | outputs.tf | Result Feedback | Defines outputs, such as the IP addresses of the created VMs | Allows you to clearly see the connection information for your new machines immediately after running terraform apply |
-
-- Phase 3: variable assignments
-
-| No. | Terraform File | Role in Terraform | Content | Purpose |
-| :--- | :--- | :--- | :--- | :--- |
-|	1 |	terraform.tfvars | variable assigments | for example, proxmox_api_token.</br> 📢❗🚨 Please do not commit this file to a public repository | Contains specific variable assignments |
-|	2 |	.gitignore | Locally files | .terraform/</br> *.tfstate</br>*.tfstate.backup</br>.terraform.lock.hcl</br> terraform.tfvars | Anything that do not necessarily commit to the public repository |
-
-- `Log Tracking`: If the installation fails, check `/var/log/post-install.log` inside the VM; this will be the primary reference for debugging the automation
-
-</details>
-
-<details><summary>Verification</summary>
-
-```bash
-
-# V1.0.0 in pve-cluster repo
-
-terraform init
-
-terraform validate
-
-terraform plan -out=tfplan
-
-terraform apply "tfplan"
-```
-</details>
-</br>
-
-# Setup K3s cluster from scratch using Terraform Module
-<details><summary>Create and setup k3s cluster using Terraform Module and Commands</summary>
-
-1. Extract resource logic to [k3s-node-module](https://github.com/kaleyxiaozheng/k3s-node-module) repo 
-2. Update Terraform main.tf file to use module
-3. Run following command in order
-```bash
-# 1. delete module context in cache
-rm -rf .terraform/modules
-
-# 2. remove lock file
-rm -f .terraform.lock.hcl
-
-# 3. remove .terrform
-rm -rf .terraform
-
-# 4. Re-init and pull down the latest codes
-terraform init -upgrade
-
-# 5. terraform plan and apply
-terraform plan
-
-# 6. To prevent deadlocks caused by resource contention, limit the Terraform concurrency during the next execution to ensure resources are created sequentially rather than in parallel
-terraform apply -parallelism=1
-```
-</details>
 
 <details><summary>Verififcation</summary>
 

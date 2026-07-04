@@ -57,3 +57,14 @@ variable "node_type" {
   description = "Node type: master or worker"
   default     = "worker" 
 }
+
+variable "tailscale_auth_key" {
+  description = "Tailscale auth key for node access"
+  type        = string
+  sensitive   = true  # true to prevent it from being displayed in logs, as it's a sensitive value
+}
+
+# variable "master_tailscale_ip" {
+#   description = "Tailscale IP of the master node for worker nodes to connect"
+#   type        = string
+# }
