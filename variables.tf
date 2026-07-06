@@ -33,6 +33,13 @@ variable "k3s_token" {
   sensitive   = true  # true to prevent it from being displayed in logs, as it's a sensitive value
 }
 
+variable "ssh_private_key_path" {
+  description = "Path to the SSH private key for node access"
+  type        = string
+  default     = "/Users/kaleyzheng/.ssh/id_ed25519"
+  sensitive   = true  # true to prevent it from being displayed in logs, as it's a sensitive value
+}
+
 variable "ssh_public_key_path" { 
   description = "Path to the SSH public key for node access"
   type = string 
