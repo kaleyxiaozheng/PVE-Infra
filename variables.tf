@@ -27,12 +27,6 @@ variable "proxmox_api_token" {
   sensitive   = true  # Terraform will not display it in plain text in the logs
 }
 
-variable "ssh_private_key_path" {
-  description = "SSH private key path for connecting to Proxmox nodes"
-  type        = string
-  default     = "/Users/kaleyzheng/.ssh/id_ed25519"
-}
-
 variable "k3s_token" {
   description = "The token used for K3s node joining"
   type        = string
