@@ -18,12 +18,9 @@ provider "proxmox" {
   endpoint  = var.proxmox_api_url
   api_token = var.proxmox_api_token
   insecure  = true
-
   ssh {
-    username   = "root"
-    address     = "100.85.222.115" 
-    private_key = file(var.ssh_private_key_path) 
-    agent       = false 
+    username    = "root"
+    private_key = file(var.ssh_private_key_path)
   }
 }
 
