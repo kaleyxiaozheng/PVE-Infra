@@ -28,4 +28,5 @@ module "worker_node" {
   vm_password = var.vm_password # pass the VM password variable to the module for cloud-init use  
   k3s_token  = var.k3s_token
   tailscale_auth_key     = var.tailscale_auth_key
+  depends_on = [module.master_node] # Ensure the master node is created before worker nodes 
 }
